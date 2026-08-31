@@ -57,3 +57,7 @@ uv venv --python 3.14.2 .venv
 uv pip install --python .venv/bin/python -r requirements_test.txt
 .venv/bin/python -m pytest
 ```
+
+## License
+
+MIT

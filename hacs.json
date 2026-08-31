@@ -1,6 +1,5 @@
 {
   "name": "IR Remote HVAC",
   "content_in_root": false,
-  "render_readme": true,
-  "domains": ["irremote_hvac"]
+  "render_readme": true
 }

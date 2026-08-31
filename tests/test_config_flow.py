@@ -115,6 +115,8 @@ async def test_duplicate_config_flow_aborts(hass: HomeAssistant) -> None:
 
 async def test_reconfigure_flow_updates_entry(hass: HomeAssistant) -> None:
     """Reconfiguration should update data, title, and unique ID."""
+    hass.states.async_set("infrared.living_room", "available")
+    hass.states.async_set("infrared.office", "available")
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Bedroom AC",
@@ -154,6 +156,7 @@ async def test_reconfigure_flow_updates_entry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TEMP_STEP: "1.0"}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
