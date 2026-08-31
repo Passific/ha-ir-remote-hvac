@@ -1,4 +1,5 @@
 """The IR Remote HVAC integration."""
+
 from __future__ import annotations
 
 import importlib

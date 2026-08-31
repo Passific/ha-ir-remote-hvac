@@ -1,4 +1,5 @@
 """Climate entity for IR Remote HVAC using IRremoteESP8266 / pyhvac."""
+
 from __future__ import annotations
 
 import asyncio
@@ -138,9 +139,7 @@ class IrHvacRawCommand(Command):
         super().__init__(modulation=modulation)
         # Indices 0, 2, 4, … are marks (pulses) → keep positive.
         # Indices 1, 3, 5, … are spaces → negate.
-        self._timings = [
-            t if i % 2 == 0 else -t for i, t in enumerate(timings)
-        ]
+        self._timings = [t if i % 2 == 0 else -t for i, t in enumerate(timings)]
 
     def get_raw_timings(self) -> list[int]:
         return self._timings
@@ -261,9 +260,21 @@ async def async_setup_entry(
 
     # Resolve effective min/max from options (if set) then data, then defaults
     options = config_entry.options or {}
-    min_temp = float(options.get(CONF_MIN_TEMP, config_entry.data.get(CONF_MIN_TEMP, DEFAULT_MIN_TEMP)))
-    max_temp = float(options.get(CONF_MAX_TEMP, config_entry.data.get(CONF_MAX_TEMP, DEFAULT_MAX_TEMP)))
-    temp_step = float(options.get(CONF_TEMP_STEP, config_entry.data.get(CONF_TEMP_STEP, DEFAULT_TEMP_STEP)))
+    min_temp = float(
+        options.get(
+            CONF_MIN_TEMP, config_entry.data.get(CONF_MIN_TEMP, DEFAULT_MIN_TEMP)
+        )
+    )
+    max_temp = float(
+        options.get(
+            CONF_MAX_TEMP, config_entry.data.get(CONF_MAX_TEMP, DEFAULT_MAX_TEMP)
+        )
+    )
+    temp_step = float(
+        options.get(
+            CONF_TEMP_STEP, config_entry.data.get(CONF_TEMP_STEP, DEFAULT_TEMP_STEP)
+        )
+    )
     fallback_modulation = int(
         options.get(
             CONF_MODULATION,
@@ -282,9 +293,9 @@ async def async_setup_entry(
     current_humidity_sensor_entity_id = options.get(
         CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID
     ) or config_entry.data.get(CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID)
-    power_sensor_entity_id = options.get(CONF_POWER_SENSOR_ENTITY_ID) or config_entry.data.get(
+    power_sensor_entity_id = options.get(
         CONF_POWER_SENSOR_ENTITY_ID
-    )
+    ) or config_entry.data.get(CONF_POWER_SENSOR_ENTITY_ID)
     power_threshold_w = float(
         options.get(
             CONF_POWER_THRESHOLD,
@@ -339,7 +350,9 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
         power_sensor_entity_id: str | None,
         power_threshold_w: float,
     ) -> None:
-        self._infrared_emitter_entity_id: str = config_entry.data[CONF_EMITTER_ENTITY_ID]
+        self._infrared_emitter_entity_id: str = config_entry.data[
+            CONF_EMITTER_ENTITY_ID
+        ]
         self._entry_id: str = config_entry.entry_id
         self._ac = ac
         self._irhvac = irhvac_module
@@ -347,7 +360,9 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
         self._model = int(config_entry.data.get(CONF_MODEL, DEFAULT_MODEL))
         self._modulation = modulation
         self._debounce_delay_s = max(0.0, debounce_delay_s)
-        self._current_temperature_sensor_entity_id = current_temperature_sensor_entity_id
+        self._current_temperature_sensor_entity_id = (
+            current_temperature_sensor_entity_id
+        )
         self._current_humidity_sensor_entity_id = current_humidity_sensor_entity_id
         self._power_sensor_entity_id = power_sensor_entity_id
         self._power_threshold_w = power_threshold_w
@@ -372,10 +387,14 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
         self._attr_fan_mode = self._attr_fan_modes[0] if self._attr_fan_modes else None
 
         self._attr_swing_modes = self._detect_supported_swing_modes()
-        self._attr_swing_mode = SWING_OFF if SWING_OFF in self._attr_swing_modes else None
+        self._attr_swing_mode = (
+            SWING_OFF if SWING_OFF in self._attr_swing_modes else None
+        )
 
         self._attr_preset_modes = self._detect_supported_preset_modes()
-        self._attr_preset_mode = PRESET_NONE if PRESET_NONE in self._attr_preset_modes else None
+        self._attr_preset_mode = (
+            PRESET_NONE if PRESET_NONE in self._attr_preset_modes else None
+        )
 
         self._attr_min_temp = min_temp
         self._attr_max_temp = max_temp
@@ -386,7 +405,10 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        if HVACMode.OFF in self._attr_hvac_modes and self._last_on_hvac_mode is not None:
+        if (
+            HVACMode.OFF in self._attr_hvac_modes
+            and self._last_on_hvac_mode is not None
+        ):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
             self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
         if self._attr_fan_modes:
@@ -464,7 +486,9 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
     def async_write_ha_state(self) -> None:
         """Write entity state and notify companion entities (e.g. the power switch)."""
         super().async_write_ha_state()
-        async_dispatcher_send(self.hass, f"{SIGNAL_HVAC_STATE_UPDATED}_{self._entry_id}")
+        async_dispatcher_send(
+            self.hass, f"{SIGNAL_HVAC_STATE_UPDATED}_{self._entry_id}"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to the power sensor so hvac_action stays current."""
@@ -516,9 +540,13 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
         if self._infrared_emitter_entity_id:
             entities.append((self._infrared_emitter_entity_id, "IR emitter entity"))
         if self._current_temperature_sensor_entity_id:
-            entities.append((self._current_temperature_sensor_entity_id, "temperature sensor"))
+            entities.append(
+                (self._current_temperature_sensor_entity_id, "temperature sensor")
+            )
         if self._current_humidity_sensor_entity_id:
-            entities.append((self._current_humidity_sensor_entity_id, "humidity sensor"))
+            entities.append(
+                (self._current_humidity_sensor_entity_id, "humidity sensor")
+            )
         if self._power_sensor_entity_id:
             entities.append((self._power_sensor_entity_id, "power sensor"))
 
@@ -670,7 +698,9 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
             value_type="power",
         )
 
-    def _convert_temperature_to_celsius(self, value: float, unit: str | None) -> float | None:
+    def _convert_temperature_to_celsius(
+        self, value: float, unit: str | None
+    ) -> float | None:
         """Convert a temperature value to Celsius when possible."""
         if unit is None:
             return value
@@ -693,7 +723,10 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
     def _restore_from_last_state(self, last_state: Any) -> None:
         """Restore the cached climate state without sending IR."""
         restored_last_on_hvac_mode = last_state.attributes.get("last_on_hvac_mode")
-        if restored_last_on_hvac_mode in self._attr_hvac_modes and restored_last_on_hvac_mode != HVACMode.OFF:
+        if (
+            restored_last_on_hvac_mode in self._attr_hvac_modes
+            and restored_last_on_hvac_mode != HVACMode.OFF
+        ):
             self._last_on_hvac_mode = restored_last_on_hvac_mode
 
         hvac_mode_state = last_state.state
@@ -813,7 +846,9 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
             probe_ac.sendAc()
             return bool(list(probe_ac.getTiming()))
         except Exception as err:  # noqa: BLE001
-            _LOGGER.debug("Capability probe failed for protocol %s: %s", self._protocol, err)
+            _LOGGER.debug(
+                "Capability probe failed for protocol %s: %s", self._protocol, err
+            )
             return False
 
     def _detect_supported_hvac_modes(self) -> list[HVACMode]:
@@ -869,7 +904,9 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
                 continue
 
             swingv_name, swingh_name = swing_names
-            if not hasattr(self._irhvac, swingv_name) or not hasattr(self._irhvac, swingh_name):
+            if not hasattr(self._irhvac, swingv_name) or not hasattr(
+                self._irhvac, swingh_name
+            ):
                 continue
 
             swingv = getattr(self._irhvac, swingv_name)
@@ -916,7 +953,9 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
 
         mode_to_restore = self._last_on_hvac_mode or self._preferred_on_hvac_mode()
         if mode_to_restore is None:
-            _LOGGER.warning("No supported non-off HVAC mode available for %s", self.entity_id)
+            _LOGGER.warning(
+                "No supported non-off HVAC mode available for %s", self.entity_id
+            )
             return
 
         await self.async_set_hvac_mode(mode_to_restore)
@@ -932,7 +971,11 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC operating mode and send IR command."""
         if hvac_mode not in self._attr_hvac_modes:
-            _LOGGER.warning("Requested unsupported HVAC mode '%s' for protocol %s", hvac_mode, self._protocol)
+            _LOGGER.warning(
+                "Requested unsupported HVAC mode '%s' for protocol %s",
+                hvac_mode,
+                self._protocol,
+            )
             return
 
         if hvac_mode == HVACMode.OFF:
@@ -959,7 +1002,13 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
 
     def _preferred_on_hvac_mode(self) -> HVACMode | None:
         """Return a preferred non-off HVAC mode for turn_on/toggle actions."""
-        for preferred_mode in (HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY, HVACMode.FAN_ONLY):
+        for preferred_mode in (
+            HVACMode.AUTO,
+            HVACMode.COOL,
+            HVACMode.HEAT,
+            HVACMode.DRY,
+            HVACMode.FAN_ONLY,
+        ):
             if preferred_mode in self._attr_hvac_modes:
                 return preferred_mode
 
@@ -987,7 +1036,11 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
         """Set fan speed and send IR command."""
         fan_modes = self._attr_fan_modes or []
         if fan_mode not in fan_modes:
-            _LOGGER.warning("Requested unsupported fan mode '%s' for protocol %s", fan_mode, self._protocol)
+            _LOGGER.warning(
+                "Requested unsupported fan mode '%s' for protocol %s",
+                fan_mode,
+                self._protocol,
+            )
             return
 
         irhvac_fan_name = FAN_MODE_TO_IRHVAC.get(fan_mode)
@@ -1009,7 +1062,11 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
         """Set combined swing mode (vertical/horizontal) and send IR command."""
         swing_modes = self._attr_swing_modes or []
         if swing_mode not in swing_modes:
-            _LOGGER.warning("Requested unsupported swing mode '%s' for protocol %s", swing_mode, self._protocol)
+            _LOGGER.warning(
+                "Requested unsupported swing mode '%s' for protocol %s",
+                swing_mode,
+                self._protocol,
+            )
             return
 
         irhvac_swing_names = SWING_MODE_TO_IRHVAC.get(swing_mode)
@@ -1051,7 +1108,11 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
         """Set preset (quiet / turbo / eco / none) and send IR command."""
         preset_modes = self._attr_preset_modes or []
         if preset_mode not in preset_modes:
-            _LOGGER.warning("Requested unsupported preset mode '%s' for protocol %s", preset_mode, self._protocol)
+            _LOGGER.warning(
+                "Requested unsupported preset mode '%s' for protocol %s",
+                preset_mode,
+                self._protocol,
+            )
             return
 
         self._ac.next.quiet = preset_mode == PRESET_QUIET
@@ -1113,7 +1174,9 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
                         self.entity_id,
                     )
         except asyncio.CancelledError:
-            _LOGGER.debug("Cancelled pending debounced IR send entity=%s", self.entity_id)
+            _LOGGER.debug(
+                "Cancelled pending debounced IR send entity=%s", self.entity_id
+            )
 
     # ------------------------------------------------------------------
     # Internal helpers

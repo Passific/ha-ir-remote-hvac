@@ -19,12 +19,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install linters
         run: |
           pip install --upgrade pip
-          pip install ruff
+          pip install -r requirements_test.txt
 
       - name: Ruff check
         run: ruff check custom_components/ tests/
@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.14"]
     steps:
       - uses: actions/checkout@v4
 
@@ -50,8 +50,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install pytest pytest-asyncio pytest-homeassistant-custom-component
-          pip install pyhvac voluptuous
+          pip install -r requirements_test.txt
 
       - name: Run tests
         run: pytest --tb=short -q

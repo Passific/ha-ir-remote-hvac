@@ -132,7 +132,9 @@ def test_async_turn_on_uses_restored_last_on_mode(monkeypatch) -> None:
     entity.async_set_hvac_mode.assert_awaited_once_with(HVACMode.HEAT)
 
 
-def test_async_turn_on_falls_back_to_preferred_mode_when_missing_history(monkeypatch) -> None:
+def test_async_turn_on_falls_back_to_preferred_mode_when_missing_history(
+    monkeypatch,
+) -> None:
     """Toggle-on should still fall back to a supported preferred mode when no history exists."""
     entity = _build_entity(monkeypatch)
     entity._last_on_hvac_mode = None

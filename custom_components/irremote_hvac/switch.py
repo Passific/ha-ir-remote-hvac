@@ -1,4 +1,5 @@
 """Switch entity mirroring and controlling the IR Remote HVAC power state."""
+
 from __future__ import annotations
 
 import logging

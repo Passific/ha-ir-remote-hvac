@@ -1,4 +1,5 @@
 """Config flow for IR Remote HVAC integration."""
+
 from __future__ import annotations
 
 import logging
@@ -214,7 +215,9 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
                         mode=selector.SelectSelectorMode.DROPDOWN,
                     )
                 ),
-                vol.Optional(CONF_SHOW_ADVANCED, default=False): selector.BooleanSelector(),
+                vol.Optional(
+                    CONF_SHOW_ADVANCED, default=False
+                ): selector.BooleanSelector(),
             }
         )
 
@@ -240,7 +243,9 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema(
             {
-                vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): selector.NumberSelector(
+                vol.Optional(
+                    CONF_MODEL, default=DEFAULT_MODEL
+                ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=-1,
                         max=99,
@@ -300,7 +305,9 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_TEMP_STEP, default=default_step): selector.SelectSelector(
+                vol.Required(
+                    CONF_TEMP_STEP, default=default_step
+                ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=supported_steps,
                         mode=selector.SelectSelectorMode.LIST,
@@ -460,7 +467,9 @@ class IrRemoteHvacOptionsFlow(OptionsFlow):
                 ),
                 vol.Optional(
                     CONF_DEBOUNCE_DELAY,
-                    default=float(current.get(CONF_DEBOUNCE_DELAY, DEFAULT_DEBOUNCE_DELAY)),
+                    default=float(
+                        current.get(CONF_DEBOUNCE_DELAY, DEFAULT_DEBOUNCE_DELAY)
+                    ),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=0.0,
@@ -499,7 +508,9 @@ class IrRemoteHvacOptionsFlow(OptionsFlow):
                 ),
                 vol.Optional(
                     CONF_POWER_THRESHOLD,
-                    default=float(current.get(CONF_POWER_THRESHOLD, DEFAULT_POWER_THRESHOLD)),
+                    default=float(
+                        current.get(CONF_POWER_THRESHOLD, DEFAULT_POWER_THRESHOLD)
+                    ),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=0.0,

@@ -1,4 +1,5 @@
 """Constants for the IR Remote HVAC integration."""
+
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.climate.const import (
     FAN_AUTO,
