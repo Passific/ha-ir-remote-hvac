@@ -1,0 +1,101 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "IR Remote HVAC - Emetteur",
+        "description": "Donnez un nom a l'appareil et selectionnez l'entite emetteur IR qui transmettra les commandes a l'unite de climatisation.",
+        "data": {
+          "name": "Nom de l'appareil",
+          "emitter_entity_id": "Entite emetteur IR"
+        }
+      },
+      "protocol": {
+        "title": "IR Remote HVAC - Protocole",
+        "description": "Selectionnez le protocole IR de votre marque de climatisation. La plupart des utilisateurs peuvent conserver les parametres par defaut. Activez les parametres avances uniquement si votre appareil necessite une variante de modele.",
+        "data": {
+          "protocol": "Marque / protocole de climatisation",
+          "show_advanced": "Afficher les parametres avances (modele)"
+        }
+      },
+      "advanced": {
+        "title": "IR Remote HVAC - Avance",
+        "description": "Modifiez cette valeur uniquement si necessaire. Laissez le modele a -1 pour un comportement automatique/par defaut. La frequence porteuse est derivee du modele selectionne.",
+        "data": {
+          "model": "Variante de modele (-1 = par defaut)"
+        }
+      },
+      "temp_step": {
+        "title": "IR Remote HVAC - Pas de temperature",
+        "description": "Choisissez le pas de temperature pris en charge par le protocole/modele selectionne.",
+        "data": {
+          "temp_step": "Pas de temperature"
+        }
+      },
+      "reconfigure": {
+        "title": "IR Remote HVAC - Reconfigurer",
+        "description": "Mettez a jour le nom de l'appareil et l'emetteur IR, puis selectionnez les parametres du protocole.",
+        "data": {
+          "name": "Nom de l'appareil",
+          "emitter_entity_id": "Entite emetteur IR"
+        }
+      }
+    },
+    "abort": {
+      "no_emitters": "Aucune entite emetteur IR n'est disponible. Configurez d'abord une integration d'emetteur (par ex. ESPHome ou Broadlink).",
+      "pyhvac_not_installed": "La bibliotheque pyhvac n'est pas installee. Verifiez votre installation Home Assistant."
+    },
+    "error": {
+      "invalid_protocol": "Le protocole selectionne n'est pas reconnu.",
+      "protocol_unavailable": "La constante du protocole selectionne n'est pas disponible dans la version installee de pyhvac. Essayez de mettre a niveau pyhvac.",
+      "invalid_temp_step": "Le pas de temperature selectionne n'est pas pris en charge pour ce protocole/modele."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "IR Remote HVAC - Options",
+        "description": "Ajustez la plage de temperature, le pas, les capteurs optionnels de temperature, d'humidite et de puissance, ainsi que le delai d'anti-rebond avant envoi.",
+        "data": {
+          "min_temp": "Temperature minimale (°C)",
+          "max_temp": "Temperature maximale (°C)",
+          "temp_step": "Pas de temperature",
+          "debounce_delay": "Delai d'anti-rebond avant envoi (s)",
+          "current_temperature_sensor_entity_id": "Entite capteur de temperature actuelle",
+          "current_humidity_sensor_entity_id": "Entite capteur d'humidite actuelle",
+          "power_sensor_entity_id": "Entite capteur de puissance",
+          "power_threshold": "Seuil de puissance (W)"
+        }
+      }
+    },
+    "error": {
+      "invalid_temp_range": "La temperature minimale doit etre inferieure a la temperature maximale.",
+      "invalid_temp_step": "Le pas de temperature selectionne n'est pas pris en charge pour ce protocole/modele."
+    }
+  },
+  "issues": {
+    "external_entity_unavailable": {
+      "title": "Entite externe configuree indisponible",
+      "description": "Le %(role)s configure (%(entity_id)s) est indisponible ou introuvable. Verifiez que l'integration/appareil source est en ligne, ou mettez a jour les options IR Remote HVAC pour selectionner une autre entite."
+    }
+  },
+  "selector": {
+    "temp_step": {
+      "options": {
+        "0.5": "0.5 °C",
+        "1.0": "1.0 °C"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "irremote_hvac": {
+        "name": "IR Remote HVAC"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": ""
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="IR Remote HVAC icon dark">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#082f49"/>
+      <stop offset="100%" stop-color="#134e4a"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="164" y="118" width="184" height="276" rx="48" fill="#f8fafc"/>
+  <rect x="194" y="148" width="124" height="32" rx="16" fill="#0f172a" opacity="0.12"/>
+  <circle cx="214" cy="232" r="14" fill="#0f172a" opacity="0.85"/>
+  <circle cx="256" cy="232" r="14" fill="#0f172a" opacity="0.85"/>
+  <circle cx="298" cy="232" r="14" fill="#0f172a" opacity="0.85"/>
+  <circle cx="214" cy="274" r="14" fill="#0f172a" opacity="0.85"/>
+  <circle cx="256" cy="274" r="14" fill="#0f172a" opacity="0.85"/>
+  <circle cx="298" cy="274" r="14" fill="#0f172a" opacity="0.85"/>
+  <circle cx="214" cy="316" r="14" fill="#0f172a" opacity="0.85"/>
+  <circle cx="256" cy="316" r="14" fill="#0f172a" opacity="0.85"/>
+  <circle cx="298" cy="316" r="14" fill="#0f172a" opacity="0.85"/>
+  <path d="M120 176c42-42 88-63 136-63s94 21 136 63" fill="none" stroke="#dbeafe" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+  <path d="M146 212c34-32 69-48 110-48s76 16 110 48" fill="none" stroke="#bae6fd" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  <path d="M174 248c25-21 50-32 82-32s57 11 82 32" fill="none" stroke="#67e8f9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+  <path d="M198 360c18 18 38 27 58 27s40-9 58-27" fill="none" stroke="#f8fafc" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity="0.15"/>
+</svg>

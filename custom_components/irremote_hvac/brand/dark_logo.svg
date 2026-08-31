@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" role="img" aria-label="IR Remote HVAC logo dark">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#082f49"/>
+      <stop offset="100%" stop-color="#134e4a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="320" rx="64" fill="#0f172a"/>
+  <rect x="32" y="32" width="256" height="256" rx="64" fill="url(#bg)"/>
+  <rect x="92" y="92" width="136" height="136" rx="32" fill="#f8fafc"/>
+  <rect x="116" y="112" width="88" height="16" rx="8" fill="#0f172a" opacity="0.12"/>
+  <circle cx="134" cy="152" r="9" fill="#0f172a" opacity="0.85"/>
+  <circle cx="164" cy="152" r="9" fill="#0f172a" opacity="0.85"/>
+  <circle cx="194" cy="152" r="9" fill="#0f172a" opacity="0.85"/>
+  <circle cx="134" cy="182" r="9" fill="#0f172a" opacity="0.85"/>
+  <circle cx="164" cy="182" r="9" fill="#0f172a" opacity="0.85"/>
+  <circle cx="194" cy="182" r="9" fill="#0f172a" opacity="0.85"/>
+  <path d="M64 98c24-24 51-36 80-36s56 12 80 36" fill="none" stroke="#dbeafe" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+  <path d="M80 126c19-18 39-27 64-27s45 9 64 27" fill="none" stroke="#bae6fd" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M96 152c15-12 31-18 48-18s33 6 48 18" fill="none" stroke="#67e8f9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+  <text x="332" y="136" fill="#f8fafc" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="700">IR Remote HVAC</text>
+  <text x="332" y="194" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="400">IRremoteESP8266 custom integration</text>
+  <text x="332" y="246" fill="#67e8f9" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" letter-spacing="0.06em">LOCAL BRAND ASSET</text>
+</svg>

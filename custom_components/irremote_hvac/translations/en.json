@@ -1,0 +1,101 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "IR Remote HVAC - Emitter",
+        "description": "Give the device a name and select the IR emitter entity that will transmit commands to the AC unit.",
+        "data": {
+          "name": "Device name",
+          "emitter_entity_id": "IR emitter entity"
+        }
+      },
+      "protocol": {
+        "title": "IR Remote HVAC - Protocol",
+        "description": "Select the IR protocol for your AC brand. Most users can keep the default settings. Enable advanced settings only if your device requires a specific model variant.",
+        "data": {
+          "protocol": "AC brand / protocol",
+          "show_advanced": "Show advanced settings (model)"
+        }
+      },
+      "advanced": {
+        "title": "IR Remote HVAC - Advanced",
+        "description": "Adjust this only if needed. Keep model at -1 for automatic/default behavior. The carrier frequency is derived from the selected model.",
+        "data": {
+          "model": "Model variant (-1 = default)"
+        }
+      },
+      "temp_step": {
+        "title": "IR Remote HVAC - Temperature Step",
+        "description": "Choose the temperature step supported by your selected protocol/model.",
+        "data": {
+          "temp_step": "Temperature step"
+        }
+      },
+      "reconfigure": {
+        "title": "IR Remote HVAC - Reconfigure",
+        "description": "Update the device name and IR emitter, then select the protocol settings.",
+        "data": {
+          "name": "Device name",
+          "emitter_entity_id": "IR emitter entity"
+        }
+      }
+    },
+    "abort": {
+      "no_emitters": "No IR emitter entities are available. Please set up an emitter integration (e.g. ESPHome or Broadlink) first.",
+      "pyhvac_not_installed": "The pyhvac library is not installed. Check your Home Assistant installation."
+    },
+    "error": {
+      "invalid_protocol": "The selected protocol is not recognised.",
+      "protocol_unavailable": "The selected protocol constant is not available in the installed version of pyhvac. Try upgrading pyhvac.",
+      "invalid_temp_step": "The selected temperature step is not supported for this protocol/model."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "IR Remote HVAC - Options",
+        "description": "Adjust the temperature range, step size, optional temperature/humidity/power sensors, and send debounce delay.",
+        "data": {
+          "min_temp": "Minimum temperature (°C)",
+          "max_temp": "Maximum temperature (°C)",
+          "temp_step": "Temperature step",
+          "debounce_delay": "Debounce delay before send (s)",
+          "current_temperature_sensor_entity_id": "Current temperature sensor entity",
+          "current_humidity_sensor_entity_id": "Current humidity sensor entity",
+          "power_sensor_entity_id": "Power sensor entity",
+          "power_threshold": "Power threshold (W)"
+        }
+      }
+    },
+    "error": {
+      "invalid_temp_range": "Minimum temperature must be less than maximum temperature.",
+      "invalid_temp_step": "The selected temperature step is not supported for this protocol/model."
+    }
+  },
+  "issues": {
+    "external_entity_unavailable": {
+      "title": "Configured external entity unavailable",
+      "description": "The configured %(role)s (%(entity_id)s) is unavailable or missing. Check that the source integration/device is online, or update IR Remote HVAC options to select another entity."
+    }
+  },
+  "selector": {
+    "temp_step": {
+      "options": {
+        "0.5": "0.5 °C",
+        "1.0": "1.0 °C"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "irremote_hvac": {
+        "name": "IR Remote HVAC"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": ""
+      }
+    }
+  }
+}
