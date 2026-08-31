@@ -51,11 +51,33 @@ You will need to provide:
 - Optional temperature, humidity, and power sensors
 - Optional timing and temperature range options
 
+You can reconfigure an existing entry from the Home Assistant integration page to change the device name, IR emitter, protocol, model, or temperature step. The options flow lets you adjust temperature range, debounce delay, optional sensor entities, and the power threshold.
+
+## Supported Devices And Functions
+
+This integration supports HVAC protocols exposed by `pyhvac`/IRremoteESP8266 and sends commands through Home Assistant infrared emitters. The available modes and controls depend on the selected protocol and model.
+
+Supported functions include power, HVAC mode, target temperature, fan mode, swing mode, and presets when the underlying protocol/model can generate those commands.
+
+## Examples
+
+After setup, add the climate entity to a standard Home Assistant thermostat card. If a power sensor is configured, the entity can report idle versus active heating/cooling based on the configured watt threshold.
+
+## Removal
+
+Remove the integration from Settings > Devices & services. To fully remove a manual installation, delete `custom_components/irremote_hvac` from your Home Assistant configuration directory and restart Home Assistant.
+
 ## Notes
 
 - The integration is designed for local IR control.
 - Supported behavior depends on the selected protocol/model combination.
 - The repository includes a vendored copy of IRremoteESP8266 source material for reference and protocol alignment.
+
+## Troubleshooting
+
+- If no emitters are listed during setup, configure an infrared emitter integration first.
+- If the HVAC does not respond, verify line of sight, the selected protocol/model, and the emitter entity.
+- If an optional temperature, humidity, power sensor, or emitter becomes unavailable, Home Assistant will create a repair issue after a grace period.
 
 ## Development
 
