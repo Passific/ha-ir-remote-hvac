@@ -1,5 +1,8 @@
 {
   "name": "IR Remote HVAC",
   "content_in_root": false,
-  "render_readme": true
+  "render_readme": true,
+  "homeassistant": "2024.7.0",
+  "zip_release": true,
+  "filename": "irremote_hvac.zip"
 }

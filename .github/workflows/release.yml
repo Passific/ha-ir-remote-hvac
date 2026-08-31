@@ -4,45 +4,28 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: write
-
 jobs:
   release:
     name: Build & Upload Release Assets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out the repository
+        uses: actions/checkout@v5
 
-      - name: Set version from tag
-        id: version
+      - name: Set version in manifest
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          VERSION="${TAG#v}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          version="${{ github.event.release.tag_name }}"
+          version="${version#v}"
+          jq --arg version "$version" '.version = $version' \
+            custom_components/irremote_hvac/manifest.json > manifest.json.tmp
+          mv manifest.json.tmp custom_components/irremote_hvac/manifest.json
 
-      - name: Prepare release tree
+      - name: Zip the integration directory
         run: |
-          mkdir -p release/custom_components
-          cp -R custom_components/irremote_hvac release/custom_components/
+          cd custom_components/irremote_hvac
+          zip -r ../../irremote_hvac.zip ./
 
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          version = "${{ steps.version.outputs.version }}"
-          manifest = Path("release/custom_components/irremote_hvac/manifest.json")
-          data = json.loads(manifest.read_text())
-          data["version"] = version
-          manifest.write_text(json.dumps(data, indent=2) + "\n")
-          PY
-
-      - name: Package integration
-        run: |
-          cd release
-          zip -r ../irremote_hvac_${{ steps.version.outputs.version }}.zip custom_components/irremote_hvac
-
-      - name: Upload release asset
+      - name: Upload zip to release
         uses: softprops/action-gh-release@v2
         with:
-          files: irremote_hvac_${{ steps.version.outputs.version }}.zip
+          files: irremote_hvac.zip

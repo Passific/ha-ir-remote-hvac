@@ -1,9 +1,9 @@
 {
   "domain": "irremote_hvac",
   "name": "IR Remote HVAC",
-  "version": "1.0.6",
-  "documentation": "https://github.com/crankyoldgit/IRremoteESP8266",
-  "issue_tracker": "https://github.com/crankyoldgit/IRremoteESP8266/issues",
+  "version": "0.0.1",
+  "documentation": "https://github.com/Passific/ha-ir-remote-hvac",
+  "issue_tracker": "https://github.com/Passific/ha-ir-remote-hvac/issues",
   "requirements": ["pyhvac>=0.1.6", "infrared-protocols>=9.0.0"],
   "dependencies": ["infrared"],
   "codeowners": [],
