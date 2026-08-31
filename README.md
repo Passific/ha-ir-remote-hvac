@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/Passific/ha-ir-remote-hvac)](LICENSE)
 [![Validate](https://github.com/Passific/ha-ir-remote-hvac/actions/workflows/ci.yml/badge.svg)](https://github.com/Passific/ha-ir-remote-hvac/actions/workflows/ci.yml)
 
-<img src="custom_components/irremote_hvac/brand/dark_logo.svg" alt="Firefly III icon" height="64" align="right">
+<img src="custom_components/irremote_hvac/brand/dark_icon.svg" alt="Firefly III icon" width="96" height="96" align="right">
 
 Home Assistant custom integration for IR-controlled HVAC units using `pyhvac` and IRremoteESP8266-compatible protocol definitions.
 
