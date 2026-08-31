@@ -1,12 +1,12 @@
 {
   "domain": "irremote_hvac",
   "name": "IR Remote HVAC",
-  "version": "0.0.1",
+  "codeowners": ["@Passific"],
+  "config_flow": true,
+  "dependencies": ["infrared"],
   "documentation": "https://github.com/Passific/ha-ir-remote-hvac",
+  "iot_class": "local_push",
   "issue_tracker": "https://github.com/Passific/ha-ir-remote-hvac/issues",
   "requirements": ["pyhvac>=0.1.6", "infrared-protocols>=9.0.0"],
-  "dependencies": ["infrared"],
-  "codeowners": [],
-  "iot_class": "local_push",
-  "config_flow": true
+  "version": "0.0.1"
 }

@@ -6,9 +6,15 @@ import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import pytest
+from homeassistant.exceptions import PlatformNotReady
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.irremote_hvac.switch import IrRemoteHvacPowerSwitch
+from custom_components.irremote_hvac.const import DOMAIN
+from custom_components.irremote_hvac.switch import (
+    IrRemoteHvacPowerSwitch,
+    async_setup_entry,
+)
 
 
 def _build_switch() -> tuple[IrRemoteHvacPowerSwitch, SimpleNamespace]:
@@ -19,9 +25,17 @@ def _build_switch() -> tuple[IrRemoteHvacPowerSwitch, SimpleNamespace]:
         async_turn_on=AsyncMock(),
         async_turn_off=AsyncMock(),
     )
-    config_entry = MockConfigEntry(domain="irremote_hvac", entry_id="entry-1")
+    config_entry = MockConfigEntry(domain=DOMAIN, entry_id="entry-1")
     switch = IrRemoteHvacPowerSwitch(config_entry, climate_entity)
     return switch, climate_entity
+
+
+async def test_setup_entry_waits_for_climate_entity(hass) -> None:
+    """Switch setup should retry if the climate entity is not available yet."""
+    entry = MockConfigEntry(domain=DOMAIN, entry_id="entry-1")
+
+    with pytest.raises(PlatformNotReady):
+        await async_setup_entry(hass, entry, AsyncMock())
 
 
 def test_is_on_mirrors_climate_entity() -> None:

@@ -15,12 +15,23 @@ from custom_components.irremote_hvac import climate
 from custom_components.irremote_hvac.climate import (
     IrHvacRawCommand,
     IrRemoteHvacClimate,
+    async_setup_entry,
 )
 from custom_components.irremote_hvac.const import (
+    CONF_DEBOUNCE_DELAY,
     CONF_EMITTER_ENTITY_ID,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
     CONF_MODEL,
+    CONF_POWER_THRESHOLD,
     CONF_PROTOCOL,
+    CONF_TEMP_STEP,
+    DEFAULT_DEBOUNCE_DELAY,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DEFAULT_MODEL,
+    DEFAULT_POWER_THRESHOLD,
+    DEFAULT_TEMP_STEP,
     DOMAIN,
 )
 
@@ -97,6 +108,38 @@ def _build_entity(monkeypatch) -> IrRemoteHvacClimate:
     entity.async_write_ha_state = lambda: None
     entity._schedule_ir_send = lambda: None
     return entity
+
+
+async def test_setup_entry_falls_back_for_malformed_numeric_options(hass) -> None:
+    """Malformed stored numeric options should not prevent setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_EMITTER_ENTITY_ID: "infrared.emitter",
+            CONF_PROTOCOL: "AIRTON",
+            CONF_MODEL: "not-a-model",
+        },
+        options={
+            CONF_MIN_TEMP: "hot",
+            CONF_MAX_TEMP: "cold",
+            CONF_TEMP_STEP: "tiny",
+            CONF_DEBOUNCE_DELAY: "fast",
+            CONF_POWER_THRESHOLD: "high",
+        },
+        entry_id="entry-1",
+        title="Test HVAC",
+    )
+    added_entities = []
+
+    await async_setup_entry(hass, entry, added_entities.extend)
+
+    [entity] = added_entities
+    assert entity._model == DEFAULT_MODEL
+    assert entity._attr_min_temp == DEFAULT_MIN_TEMP
+    assert entity._attr_max_temp == DEFAULT_MAX_TEMP
+    assert entity._attr_target_temperature_step == DEFAULT_TEMP_STEP
+    assert entity._debounce_delay_s == DEFAULT_DEBOUNCE_DELAY
+    assert entity._power_threshold_w == DEFAULT_POWER_THRESHOLD
 
 
 def test_restore_from_last_state_recovers_last_on_mode(monkeypatch) -> None:

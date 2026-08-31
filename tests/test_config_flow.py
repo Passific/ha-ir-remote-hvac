@@ -64,7 +64,7 @@ async def test_full_config_flow_creates_entry(hass: HomeAssistant) -> None:
         assert result["step_id"] == "temp_step"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TEMP_STEP: "1.0"}
+            result["flow_id"], user_input={CONF_TEMP_STEP: "1_0"}
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -74,6 +74,16 @@ async def test_full_config_flow_creates_entry(hass: HomeAssistant) -> None:
     assert result["data"][CONF_TEMP_STEP] == DEFAULT_TEMP_STEP
     assert result["data"][CONF_EMITTER_ENTITY_ID] == "infrared.living_room"
     assert result["result"].unique_id == "infrared.living_room_AIRTON_-1"
+
+
+def test_temp_step_conversion_handles_unexpected_values() -> None:
+    """Unexpected temperature-step values should not crash conversion helpers."""
+    assert config_flow._selector_value_to_temp_step("0_5") == 0.5
+    assert config_flow._selector_value_to_temp_step("1_0") == 1.0
+    assert config_flow._selector_value_to_temp_step("bad_value") is None
+    assert config_flow._temp_step_to_selector_value(0.5) == "0_5"
+    assert config_flow._temp_step_to_selector_value(1.0) == "1_0"
+    assert config_flow._temp_step_to_selector_value("bad_value") == "1_0"
 
 
 async def test_duplicate_config_flow_aborts(hass: HomeAssistant) -> None:
@@ -106,7 +116,7 @@ async def test_duplicate_config_flow_aborts(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_PROTOCOL: "Airton"}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TEMP_STEP: "1.0"}
+            result["flow_id"], user_input={CONF_TEMP_STEP: "1_0"}
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -154,7 +164,7 @@ async def test_reconfigure_flow_updates_entry(hass: HomeAssistant) -> None:
         assert result["step_id"] == "temp_step"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_TEMP_STEP: "1.0"}
+            result["flow_id"], user_input={CONF_TEMP_STEP: "1_0"}
         )
         await hass.async_block_till_done()
 

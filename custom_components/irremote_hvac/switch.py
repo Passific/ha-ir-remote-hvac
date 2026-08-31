@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,7 +24,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the IR HVAC power switch from a config entry."""
-    climate_entity = hass.data[DOMAIN][config_entry.entry_id]
+    climate_entity = hass.data.get(DOMAIN, {}).get(config_entry.entry_id)
+    if climate_entity is None:
+        raise PlatformNotReady("Waiting for IR HVAC climate entity")
+
     async_add_entities([IrRemoteHvacPowerSwitch(config_entry, climate_entity)])
 
 

@@ -47,6 +47,32 @@ _LOGGER = logging.getLogger(__name__)
 
 PROTOCOL_LABELS = sorted(SUPPORTED_PROTOCOLS.keys())
 CONF_SHOW_ADVANCED = "show_advanced"
+TEMP_STEP_HALF = "0_5"
+TEMP_STEP_WHOLE = "1_0"
+DEFAULT_TEMP_STEP_SELECTOR_VALUE = TEMP_STEP_WHOLE
+TEMP_STEP_SELECTOR_VALUES = {
+    TEMP_STEP_HALF: 0.5,
+    TEMP_STEP_WHOLE: 1.0,
+}
+
+
+def _temp_step_to_selector_value(temp_step: Any) -> str:
+    """Convert a stored temp step value to a valid selector option key."""
+    try:
+        stored_temp_step = float(temp_step)
+    except (TypeError, ValueError):
+        return DEFAULT_TEMP_STEP_SELECTOR_VALUE
+
+    for selector_value, value in TEMP_STEP_SELECTOR_VALUES.items():
+        if stored_temp_step == value:
+            return selector_value
+
+    return DEFAULT_TEMP_STEP_SELECTOR_VALUE
+
+
+def _selector_value_to_temp_step(selector_value: str) -> float | None:
+    """Convert a selector option key back to a temp step value."""
+    return TEMP_STEP_SELECTOR_VALUES.get(selector_value)
 
 
 def _supports_half_degree_step(protocol_const: str, model: int) -> bool:
@@ -90,9 +116,9 @@ def _supports_half_degree_step(protocol_const: str, model: int) -> bool:
 
 def _supported_temp_step_options(protocol_const: str, model: int) -> list[str]:
     """Return supported temp_step options as selector values."""
-    options = ["1.0"]
+    options = [TEMP_STEP_WHOLE]
     if _supports_half_degree_step(protocol_const, model):
-        options.insert(0, "0.5")
+        options.insert(0, TEMP_STEP_HALF)
     return options
 
 
@@ -274,10 +300,11 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             selected_step = str(user_input.get(CONF_TEMP_STEP, DEFAULT_TEMP_STEP))
-            if selected_step not in supported_steps:
+            selected_temp_step = _selector_value_to_temp_step(selected_step)
+            if selected_step not in supported_steps or selected_temp_step is None:
                 errors[CONF_TEMP_STEP] = "invalid_temp_step"
             else:
-                self._data[CONF_TEMP_STEP] = float(selected_step)
+                self._data[CONF_TEMP_STEP] = selected_temp_step
                 unique_id = "_".join(
                     (
                         str(self._data[CONF_EMITTER_ENTITY_ID]),
@@ -299,7 +326,9 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=self._data,
                 )
 
-        default_step = str(self._data.get(CONF_TEMP_STEP, DEFAULT_TEMP_STEP))
+        default_step = _temp_step_to_selector_value(
+            self._data.get(CONF_TEMP_STEP, DEFAULT_TEMP_STEP)
+        )
         if default_step not in supported_steps:
             default_step = supported_steps[0]
 
@@ -387,13 +416,15 @@ class IrRemoteHvacOptionsFlow(OptionsFlow):
         supported_steps = _supported_temp_step_options(protocol_const, model)
 
         if user_input is not None:
+            selected_step = str(user_input[CONF_TEMP_STEP])
+            selected_temp_step = _selector_value_to_temp_step(selected_step)
             if user_input[CONF_MIN_TEMP] >= user_input[CONF_MAX_TEMP]:
                 errors["base"] = "invalid_temp_range"
-            elif str(user_input[CONF_TEMP_STEP]) not in supported_steps:
+            elif selected_step not in supported_steps or selected_temp_step is None:
                 errors[CONF_TEMP_STEP] = "invalid_temp_step"
             else:
                 normalized = dict(user_input)
-                normalized[CONF_TEMP_STEP] = float(str(user_input[CONF_TEMP_STEP]))
+                normalized[CONF_TEMP_STEP] = selected_temp_step
                 normalized[CONF_DEBOUNCE_DELAY] = float(
                     user_input.get(
                         CONF_DEBOUNCE_DELAY,
@@ -425,7 +456,9 @@ class IrRemoteHvacOptionsFlow(OptionsFlow):
                 )
                 return self.async_create_entry(title="", data=normalized)
 
-        default_temp_step = str(current.get(CONF_TEMP_STEP, DEFAULT_TEMP_STEP))
+        default_temp_step = _temp_step_to_selector_value(
+            current.get(CONF_TEMP_STEP, DEFAULT_TEMP_STEP)
+        )
         if default_temp_step not in supported_steps:
             default_temp_step = supported_steps[0]
 

@@ -227,6 +227,22 @@ def _normalize_daikin_timings(raw_timings: list[int]) -> list[int]:
     return normalized
 
 
+def _coerce_float(value: Any, fallback: float) -> float:
+    """Return value as float, or fallback when stored config is malformed."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return fallback
+
+
+def _coerce_int(value: Any, fallback: int) -> int:
+    """Return value as int, or fallback when stored config is malformed."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return fallback
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -241,7 +257,7 @@ async def async_setup_entry(
         ) from err
 
     protocol_const = config_entry.data[CONF_PROTOCOL]
-    model = int(config_entry.data.get(CONF_MODEL, DEFAULT_MODEL))
+    model = _coerce_int(config_entry.data.get(CONF_MODEL), DEFAULT_MODEL)
 
     if not hasattr(irhvac, protocol_const):
         raise HomeAssistantError(
@@ -260,32 +276,44 @@ async def async_setup_entry(
 
     # Resolve effective min/max from options (if set) then data, then defaults
     options = config_entry.options or {}
-    min_temp = float(
+    min_temp = _coerce_float(
         options.get(
             CONF_MIN_TEMP, config_entry.data.get(CONF_MIN_TEMP, DEFAULT_MIN_TEMP)
-        )
+        ),
+        DEFAULT_MIN_TEMP,
     )
-    max_temp = float(
+    max_temp = _coerce_float(
         options.get(
             CONF_MAX_TEMP, config_entry.data.get(CONF_MAX_TEMP, DEFAULT_MAX_TEMP)
-        )
+        ),
+        DEFAULT_MAX_TEMP,
     )
-    temp_step = float(
+    if min_temp >= max_temp:
+        min_temp = DEFAULT_MIN_TEMP
+        max_temp = DEFAULT_MAX_TEMP
+
+    temp_step = _coerce_float(
         options.get(
             CONF_TEMP_STEP, config_entry.data.get(CONF_TEMP_STEP, DEFAULT_TEMP_STEP)
-        )
+        ),
+        DEFAULT_TEMP_STEP,
     )
-    fallback_modulation = int(
+    if temp_step not in (0.5, 1.0):
+        temp_step = DEFAULT_TEMP_STEP
+
+    fallback_modulation = _coerce_int(
         options.get(
             CONF_MODULATION,
             config_entry.data.get(CONF_MODULATION, DEFAULT_MODULATION),
-        )
+        ),
+        DEFAULT_MODULATION,
     )
-    debounce_delay_s = float(
+    debounce_delay_s = _coerce_float(
         options.get(
             CONF_DEBOUNCE_DELAY,
             config_entry.data.get(CONF_DEBOUNCE_DELAY, DEFAULT_DEBOUNCE_DELAY),
-        )
+        ),
+        DEFAULT_DEBOUNCE_DELAY,
     )
     current_temperature_sensor_entity_id = options.get(
         CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID
@@ -296,11 +324,12 @@ async def async_setup_entry(
     power_sensor_entity_id = options.get(
         CONF_POWER_SENSOR_ENTITY_ID
     ) or config_entry.data.get(CONF_POWER_SENSOR_ENTITY_ID)
-    power_threshold_w = float(
+    power_threshold_w = _coerce_float(
         options.get(
             CONF_POWER_THRESHOLD,
             config_entry.data.get(CONF_POWER_THRESHOLD, DEFAULT_POWER_THRESHOLD),
-        )
+        ),
+        DEFAULT_POWER_THRESHOLD,
     )
     modulation = _resolve_modulation(irhvac, protocol_const, model, fallback_modulation)
 
@@ -357,7 +386,7 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreEntity, ClimateE
         self._ac = ac
         self._irhvac = irhvac_module
         self._protocol = config_entry.data[CONF_PROTOCOL]
-        self._model = int(config_entry.data.get(CONF_MODEL, DEFAULT_MODEL))
+        self._model = _coerce_int(config_entry.data.get(CONF_MODEL), DEFAULT_MODEL)
         self._modulation = modulation
         self._debounce_delay_s = max(0.0, debounce_delay_s)
         self._current_temperature_sensor_entity_id = (
