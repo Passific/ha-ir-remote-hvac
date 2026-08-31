@@ -19,10 +19,13 @@ Home Assistant custom integration for IR-controlled HVAC units using `pyhvac` an
 
 ### HACS
 
-1. Add this repository as a custom repository in HACS.
-2. Install the integration.
-3. Restart Home Assistant.
-4. Add the integration from the Home Assistant UI and select your IR emitter entity.
+1. Make sure [HACS](https://hacs.xyz/) is installed.
+2. Go to **HACS > Integrations > ⋮ > Custom repositories**.
+3. Add `https://github.com/Passific/ha-ir-remote-hvac` as an **Integration** repository.
+4. Search for **IR Remote HVAC** in HACS and install it.
+5. Restart Home Assistant.
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Passific&repository=ha-ir-remote-hvac&category=integration)
 
 ### Manual
 
