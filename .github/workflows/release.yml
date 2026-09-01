@@ -12,7 +12,7 @@ jobs:
       contents: write
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set version in manifest
         run: |
@@ -26,6 +26,98 @@ jobs:
         run: |
           cd custom_components/irremote_hvac
           zip -r ../../irremote_hvac.zip ./
+
+      - name: Generate categorized release notes from commits
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          current_tag="${{ github.event.release.tag_name }}"
+          previous_tag=$(git tag --sort=-v:refname | grep -v "^${current_tag}$" | head -n1 || true)
+
+          if [ -n "$previous_tag" ]; then
+            range="${previous_tag}..${current_tag}"
+          else
+            range="$current_tag"
+          fi
+
+          # Order defines both category precedence and output order.
+          order=(
+            "🚀 New Features"
+            "🐛 Bug Fixes"
+            "♻️ Refactoring"
+            "⚡ Performance"
+            "📚 Documentation"
+            "🧪 Tests"
+            "🧹 Chores"
+            "📦 Other Changes"
+          )
+          declare -A pattern=(
+            ["🚀 New Features"]='^(feat|add|new|implement|introduc)'
+            ["🐛 Bug Fixes"]='^(fix|bug|patch|resolve|correct)'
+            ["♻️ Refactoring"]='^(refactor|cleanup|clean-up|restructure)'
+            ["⚡ Performance"]='^(perf|optimi[sz])'
+            ["📚 Documentation"]='^(docs?|readme)'
+            ["🧪 Tests"]='^tests?'
+            ["🧹 Chores"]='^(chore|bump|update|upgrade|deps?|dependenc|ci|build|style)'
+          )
+          declare -A categorized
+
+          trim() {
+            local s="$1"
+            s="${s#"${s%%[![:space:]]*}"}"
+            s="${s%"${s##*[![:space:]]}"}"
+            printf '%s' "$s"
+          }
+
+          while IFS='|' read -r subject hash; do
+            [ -z "$subject" ] && continue
+            lower=$(tr '[:upper:]' '[:lower:]' <<< "$subject")
+            line="- ${subject} (${hash})"$'\n'
+
+            # Commits like "fix something + add something else" are split on
+            # "+" and each clause is categorized independently, so the commit
+            # can end up listed under several categories.
+            declare -A seen=()
+            matched_keys=()
+            IFS='+' read -ra clauses <<< "$lower"
+            for clause in "${clauses[@]}"; do
+              clause="$(trim "$clause")"
+              for key in "${order[@]}"; do
+                [ "$key" = "📦 Other Changes" ] && continue
+                if [[ "$clause" =~ ${pattern[$key]} ]]; then
+                  if [ -z "${seen[$key]:-}" ]; then
+                    matched_keys+=("$key")
+                    seen["$key"]=1
+                  fi
+                  break
+                fi
+              done
+            done
+            unset seen
+
+            if [ ${#matched_keys[@]} -eq 0 ]; then
+              matched_keys=("📦 Other Changes")
+            fi
+
+            for key in "${matched_keys[@]}"; do
+              categorized["$key"]+="$line"
+            done
+          done < <(git log "$range" --no-merges --pretty=format:'%s|%h')
+
+          notes=""
+          for key in "${order[@]}"; do
+            if [ -n "${categorized[$key]:-}" ]; then
+              notes+="## ${key}"$'\n'"${categorized[$key]}"$'\n'
+            fi
+          done
+          [ -z "$notes" ] && notes="- No changes recorded"
+
+          existing_notes=$(gh release view "$current_tag" --json body --jq .body)
+          if [ -n "$existing_notes" ]; then
+            notes="${existing_notes}"$'\n\n'"${notes}"
+          fi
+
+          gh release edit "$current_tag" --notes "$notes"
 
       - name: Upload zip to release
         uses: softprops/action-gh-release@v2

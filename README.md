@@ -71,7 +71,6 @@ Remove the integration from Settings > Devices & services. To fully remove a man
 
 - The integration is designed for local IR control.
 - Supported behavior depends on the selected protocol/model combination.
-- The repository includes a vendored copy of IRremoteESP8266 source material for reference and protocol alignment.
 
 ## Troubleshooting
 
