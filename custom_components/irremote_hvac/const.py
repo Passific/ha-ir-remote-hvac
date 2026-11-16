@@ -1,17 +1,5 @@
 """Constants for the IR Remote HVAC integration."""
 
-from homeassistant.components.climate import HVACMode
-from homeassistant.components.climate.const import (
-    FAN_AUTO,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
-    SWING_BOTH,
-    SWING_HORIZONTAL,
-    SWING_OFF,
-    SWING_VERTICAL,
-)
-
 DOMAIN = "irremote_hvac"
 
 # Dispatcher signal (suffixed with the config entry id) fired whenever the
@@ -21,7 +9,8 @@ SIGNAL_HVAC_STATE_UPDATED = f"{DOMAIN}_hvac_state_updated"
 
 # Config entry keys
 CONF_EMITTER_ENTITY_ID = "emitter_entity_id"
-CONF_PROTOCOL = "protocol"
+CONF_BRAND = "brand"
+CONF_LEGACY_PROTOCOL = "protocol"
 CONF_MODEL = "model"
 CONF_MODULATION = "modulation"
 CONF_MIN_TEMP = "min_temp"
@@ -37,7 +26,7 @@ CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID = "current_humidity_sensor_entity_id"
 DEFAULT_MIN_TEMP = 16.0
 DEFAULT_MAX_TEMP = 30.0
 DEFAULT_TEMP_STEP = 1.0
-DEFAULT_MODEL = -1
+LEGACY_DEFAULT_MODEL = -1
 DEFAULT_MODULATION = 38000
 DEFAULT_DEBOUNCE_DELAY = 2.0
 DEFAULT_POWER_THRESHOLD = 10.0
@@ -50,47 +39,9 @@ FAN_MAX = "max"
 PRESET_QUIET = "quiet"
 PRESET_TURBO = "turbo"
 
-# -----------------------------------------------------------------------
-# Mapping: HA HVACMode → irhvac opmode_t constant name (string)
-# (used with getattr(irhvac, name))
-# -----------------------------------------------------------------------
-HVAC_MODE_TO_IRHVAC: dict[str, str] = {
-    HVACMode.AUTO: "opmode_t_kAuto",
-    HVACMode.COOL: "opmode_t_kCool",
-    HVACMode.HEAT: "opmode_t_kHeat",
-    HVACMode.DRY: "opmode_t_kDry",
-    HVACMode.FAN_ONLY: "opmode_t_kFan",
-}
-
-# -----------------------------------------------------------------------
-# Mapping: HA fan mode string → irhvac fanspeed_t constant name
-# -----------------------------------------------------------------------
-FAN_MODE_TO_IRHVAC: dict[str, str] = {
-    FAN_AUTO: "fanspeed_t_kAuto",
-    FAN_MIN: "fanspeed_t_kMin",
-    FAN_LOW: "fanspeed_t_kLow",
-    FAN_MEDIUM: "fanspeed_t_kMedium",
-    FAN_HIGH: "fanspeed_t_kHigh",
-    FAN_MAX: "fanspeed_t_kMax",
-}
-
-# -----------------------------------------------------------------------
-# Mapping: combined swing mode string -> (vertical, horizontal) irhvac
-# constant names
-# -----------------------------------------------------------------------
-SWING_MODE_TO_IRHVAC: dict[str, tuple[str, str]] = {
-    SWING_OFF: ("swingv_t_kOff", "swingh_t_kOff"),
-    SWING_VERTICAL: ("swingv_t_kAuto", "swingh_t_kOff"),
-    SWING_HORIZONTAL: ("swingv_t_kOff", "swingh_t_kAuto"),
-    SWING_BOTH: ("swingv_t_kAuto", "swingh_t_kAuto"),
-}
-
-# -----------------------------------------------------------------------
-# Supported HVAC protocols (user-visible label → irhvac constant name)
-# All entries correspond to decode_type_t values exposed by irhvac that
-# are handled by IRac::sendAc().
-# -----------------------------------------------------------------------
-SUPPORTED_PROTOCOLS: dict[str, str] = {
+# Protocol identifiers used by config entries created before pyhvac 0.2.
+# They are retained only to migrate existing entries.
+LEGACY_SUPPORTED_PROTOCOLS: dict[str, str] = {
     "Airton": "AIRTON",
     "Airwell": "AIRWELL",
     "Amcor": "AMCOR",

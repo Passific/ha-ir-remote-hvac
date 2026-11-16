@@ -9,31 +9,30 @@
           "emitter_entity_id": "IR emitter entity"
         }
       },
-      "protocol": {
-        "title": "IR Remote HVAC - Protocol",
-        "description": "Select the IR protocol for your AC brand. Most users can keep the default settings. Enable advanced settings only if your device requires a specific model variant.",
+      "brand": {
+        "title": "IR Remote HVAC - Brand",
+        "description": "Select the HVAC brand, then choose the matching model.",
         "data": {
-          "protocol": "AC brand / protocol",
-          "show_advanced": "Show advanced settings (model)"
+          "brand": "HVAC brand"
         }
       },
-      "advanced": {
-        "title": "IR Remote HVAC - Advanced",
-        "description": "Adjust this only if needed. Keep model at -1 for automatic/default behavior. The carrier frequency is derived from the selected model.",
+      "model": {
+        "title": "IR Remote HVAC - Model",
+        "description": "Select the model or remote that matches your HVAC unit.",
         "data": {
-          "model": "Model variant (-1 = default)"
+          "model": "HVAC model / remote"
         }
       },
       "temp_step": {
         "title": "IR Remote HVAC - Temperature Step",
-        "description": "Choose the temperature step supported by your selected protocol/model.",
+        "description": "Choose the temperature step supported by your selected model.",
         "data": {
           "temp_step": "Temperature step"
         }
       },
       "reconfigure": {
         "title": "IR Remote HVAC - Reconfigure",
-        "description": "Update the device name and IR emitter, then select the protocol settings.",
+        "description": "Update the device name and IR emitter, then select the HVAC brand and model.",
         "data": {
           "name": "Device name",
           "emitter_entity_id": "IR emitter entity"
@@ -45,9 +44,9 @@
       "pyhvac_not_installed": "The pyhvac library is not installed. Check your Home Assistant installation."
     },
     "error": {
-      "invalid_protocol": "The selected protocol is not recognised.",
-      "protocol_unavailable": "The selected protocol constant is not available in the installed version of pyhvac. Try upgrading pyhvac.",
-      "invalid_temp_step": "The selected temperature step is not supported for this protocol/model."
+      "invalid_brand": "The selected HVAC brand is not recognised.",
+      "invalid_model": "The selected model is not available for this brand.",
+      "invalid_temp_step": "The selected temperature step is not supported for this model."
     }
   },
   "options": {
@@ -69,7 +68,12 @@
     },
     "error": {
       "invalid_temp_range": "Minimum temperature must be less than maximum temperature.",
-      "invalid_temp_step": "The selected temperature step is not supported for this protocol/model."
+      "invalid_temp_step": "The selected temperature step is not supported for this model."
+    }
+  },
+  "exceptions": {
+    "legacy_device_migration": {
+      "message": "The saved device cannot be migrated automatically. Reconfigure the entry and select its brand and model."
     }
   },
   "issues": {

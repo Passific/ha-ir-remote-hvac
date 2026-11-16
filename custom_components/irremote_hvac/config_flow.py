@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -19,34 +18,30 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from pyhvac import irhvac  # type: ignore[reportMissingImports]
+from pyhvac import registry
 
 from .const import (
     CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID,
     CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID,
     CONF_DEBOUNCE_DELAY,
+    CONF_BRAND,
     CONF_EMITTER_ENTITY_ID,
+    CONF_LEGACY_PROTOCOL,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_MODEL,
     CONF_POWER_SENSOR_ENTITY_ID,
     CONF_POWER_THRESHOLD,
-    CONF_PROTOCOL,
     CONF_TEMP_STEP,
     DEFAULT_DEBOUNCE_DELAY,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
-    DEFAULT_MODEL,
     DEFAULT_POWER_THRESHOLD,
     DEFAULT_TEMP_STEP,
     DOMAIN,
-    SUPPORTED_PROTOCOLS,
 )
+from .pyhvac_helpers import get_device, migrate_legacy_device
 
-_LOGGER = logging.getLogger(__name__)
-
-PROTOCOL_LABELS = sorted(SUPPORTED_PROTOCOLS.keys())
-CONF_SHOW_ADVANCED = "show_advanced"
 TEMP_STEP_HALF = "0_5"
 TEMP_STEP_WHOLE = "1_0"
 DEFAULT_TEMP_STEP_SELECTOR_VALUE = TEMP_STEP_WHOLE
@@ -75,103 +70,21 @@ def _selector_value_to_temp_step(selector_value: str) -> float | None:
     return TEMP_STEP_SELECTOR_VALUES.get(selector_value)
 
 
-def _supports_half_degree_step(protocol_const: str, model: int) -> bool:
-    """Return True when the protocol/model appears to support 0.5 C steps."""
-    if not hasattr(irhvac, protocol_const):
-        return False
-
-    try:
-        ac = irhvac.IRac(0)
-        ac.next.protocol = getattr(irhvac, protocol_const)
-        ac.next.model = model
-        ac.next.celsius = True
-        ac.next.power = True
-
-        # Use COOL when available so temperature changes are encoded.
-        if hasattr(irhvac, "opmode_t_kCool"):
-            ac.next.mode = irhvac.opmode_t_kCool
-
-        ac.next.degrees = 22.0
-        ac.resetTiming()
-        ac.sendAc()
-        timings_whole = list(ac.getTiming())
-        ac.resetTiming()
-
-        ac.next.degrees = 22.5
-        ac.sendAc()
-        timings_half = list(ac.getTiming())
-        ac.resetTiming()
-
-        # If half-step is supported, command payload should change.
-        return bool(timings_whole and timings_half and timings_whole != timings_half)
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.debug(
-            "Failed to probe temp_step support for protocol=%s model=%s: %s",
-            protocol_const,
-            model,
-            err,
-        )
-        return False
-
-
-def _supported_temp_step_options(protocol_const: str, model: int) -> list[str]:
-    """Return supported temp_step options as selector values."""
-    options = [TEMP_STEP_WHOLE]
-    if _supports_half_degree_step(protocol_const, model):
-        options.insert(0, TEMP_STEP_HALF)
+def _supported_temp_step_options(device: Any) -> list[str]:
+    """Return temperature steps supported by the selected device."""
+    decimals = device.capabilities.temperature.decimals
+    options = []
+    if 5 in decimals:
+        options.append(TEMP_STEP_HALF)
+    if 0 in decimals or not options:
+        options.append(TEMP_STEP_WHOLE)
     return options
-
-
-def _probe_timings(protocol_const: str, model: int) -> list[int] | None:
-    """Return generated timings for a probe state, or None if unavailable."""
-    if not hasattr(irhvac, protocol_const):
-        return None
-
-    try:
-        ac = irhvac.IRac(0)
-        ac.next.protocol = getattr(irhvac, protocol_const)
-        ac.next.model = model
-        ac.next.celsius = True
-        ac.next.power = True
-
-        if hasattr(irhvac, "opmode_t_kCool"):
-            ac.next.mode = irhvac.opmode_t_kCool
-
-        ac.next.degrees = 22.0
-        ac.resetTiming()
-        ac.sendAc()
-        timings = list(ac.getTiming())
-        ac.resetTiming()
-        return timings or None
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.debug(
-            "Failed to probe timings for protocol=%s model=%s: %s",
-            protocol_const,
-            model,
-            err,
-        )
-        return None
-
-
-def _supports_model_variants(protocol_const: str) -> bool:
-    """Return True when the protocol appears to expose model variants."""
-    default_timings = _probe_timings(protocol_const, DEFAULT_MODEL)
-
-    for candidate_model in (0, 1, 2, 3, 4, 5, 10):
-        candidate_timings = _probe_timings(protocol_const, candidate_model)
-        if candidate_timings is None:
-            continue
-
-        if default_timings is None or candidate_timings != default_timings:
-            return True
-
-    return False
 
 
 class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for IR Remote HVAC."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
@@ -181,15 +94,13 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step 1: select emitter entity and give the device a name."""
-        errors: dict[str, str] = {}
-
         emitters = infrared.async_get_emitters(self.hass)
         if not emitters:
             return self.async_abort(reason="no_emitters")
 
         if user_input is not None:
             self._data.update(user_input)
-            return await self.async_step_protocol()
+            return await self.async_step_brand()
 
         schema = vol.Schema(
             {
@@ -206,84 +117,68 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=schema,
-            errors=errors,
         )
 
-    async def async_step_protocol(
+    async def async_step_brand(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Step 2: select the AC protocol and optionally open advanced settings."""
+        """Step 2: select the HVAC brand."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            protocol_label = user_input[CONF_PROTOCOL]
-            protocol_const = SUPPORTED_PROTOCOLS.get(protocol_label)
-            if protocol_const is None:
-                errors[CONF_PROTOCOL] = "invalid_protocol"
+            brand = user_input[CONF_BRAND]
+            if brand not in registry.brands():
+                errors[CONF_BRAND] = "invalid_brand"
             else:
-                # Validate that the constant actually exists in irhvac
-                if not hasattr(irhvac, protocol_const):
-                    errors[CONF_PROTOCOL] = "protocol_unavailable"
-
-            if not errors:
-                self._data[CONF_PROTOCOL] = protocol_const
-                if user_input.get(CONF_SHOW_ADVANCED, False):
-                    return await self.async_step_advanced()
-
-                self._data[CONF_MODEL] = DEFAULT_MODEL
-                return await self.async_step_temp_step()
+                self._data[CONF_BRAND] = brand
+                return await self.async_step_model()
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_PROTOCOL): selector.SelectSelector(
+                vol.Required(CONF_BRAND): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=PROTOCOL_LABELS,
+                        options=registry.brands(),
                         mode=selector.SelectSelectorMode.DROPDOWN,
                     )
                 ),
-                vol.Optional(
-                    CONF_SHOW_ADVANCED, default=False
-                ): selector.BooleanSelector(),
             }
         )
 
         return self.async_show_form(
-            step_id="protocol",
+            step_id="brand",
             data_schema=schema,
             errors=errors,
         )
 
-    async def async_step_advanced(
+    async def async_step_model(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Step 3: optional advanced protocol settings."""
+        """Step 3: select the model for the chosen brand."""
         errors: dict[str, str] = {}
-
-        if not _supports_model_variants(str(self._data[CONF_PROTOCOL])):
-            self._data[CONF_MODEL] = DEFAULT_MODEL
-            return await self.async_step_temp_step()
+        brand = str(self._data[CONF_BRAND])
+        models = registry.models(brand)
 
         if user_input is not None:
-            self._data[CONF_MODEL] = user_input.get(CONF_MODEL, DEFAULT_MODEL)
-            return await self.async_step_temp_step()
+            model = str(user_input[CONF_MODEL])
+            if model not in models:
+                errors[CONF_MODEL] = "invalid_model"
+            else:
+                self._data[CONF_MODEL] = model
+                return await self.async_step_temp_step()
 
         schema = vol.Schema(
             {
-                vol.Optional(
-                    CONF_MODEL, default=DEFAULT_MODEL
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=-1,
-                        max=99,
-                        step=1,
-                        mode=selector.NumberSelectorMode.BOX,
+                vol.Required(CONF_MODEL): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=models,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
                     )
                 ),
             }
         )
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="model",
             data_schema=schema,
             errors=errors,
         )
@@ -294,9 +189,8 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step 4: choose temperature step supported by selected model."""
         errors: dict[str, str] = {}
 
-        protocol_const = str(self._data[CONF_PROTOCOL])
-        model = int(self._data.get(CONF_MODEL, DEFAULT_MODEL))
-        supported_steps = _supported_temp_step_options(protocol_const, model)
+        device = get_device(str(self._data[CONF_BRAND]), str(self._data[CONF_MODEL]))
+        supported_steps = _supported_temp_step_options(device)
 
         if user_input is not None:
             selected_step = str(user_input.get(CONF_TEMP_STEP, DEFAULT_TEMP_STEP))
@@ -308,12 +202,14 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
                 unique_id = "_".join(
                     (
                         str(self._data[CONF_EMITTER_ENTITY_ID]),
-                        protocol_const,
-                        str(model),
+                        str(self._data[CONF_BRAND]),
+                        str(self._data[CONF_MODEL]),
                     )
                 )
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
+                if self._device_already_configured():
+                    return self.async_abort(reason="already_configured")
                 if self._is_reconfigure:
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(),
@@ -352,6 +248,28 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    def _device_already_configured(self) -> bool:
+        """Check canonical brand/model data, including migrated legacy entries."""
+        reconfigure_entry_id = (
+            self._get_reconfigure_entry().entry_id if self._is_reconfigure else None
+        )
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.entry_id == reconfigure_entry_id:
+                continue
+            data = entry.data
+            if CONF_LEGACY_PROTOCOL in data:
+                try:
+                    data = migrate_legacy_device(dict(data))
+                except ValueError:
+                    continue
+            if (
+                data.get(CONF_EMITTER_ENTITY_ID) == self._data[CONF_EMITTER_ENTITY_ID]
+                and data.get(CONF_BRAND) == self._data[CONF_BRAND]
+                and data.get(CONF_MODEL) == self._data[CONF_MODEL]
+            ):
+                return True
+        return False
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> IrRemoteHvacOptionsFlow:
@@ -369,9 +287,14 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
         if user_input is not None:
             self._is_reconfigure = True
-            self._data = dict(reconfigure_entry.data)
+            try:
+                self._data = migrate_legacy_device(dict(reconfigure_entry.data))
+            except ValueError:
+                self._data = dict(reconfigure_entry.data)
+                self._data.pop(CONF_LEGACY_PROTOCOL, None)
+                self._data.pop(CONF_MODEL, None)
             self._data.update(user_input)
-            return await self.async_step_protocol()
+            return await self.async_step_brand()
 
         schema = vol.Schema(
             {
@@ -411,9 +334,11 @@ class IrRemoteHvacOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         current = self._config_entry.options or self._config_entry.data
-        protocol_const = str(self._config_entry.data.get(CONF_PROTOCOL, ""))
-        model = int(self._config_entry.data.get(CONF_MODEL, DEFAULT_MODEL))
-        supported_steps = _supported_temp_step_options(protocol_const, model)
+        device = get_device(
+            str(self._config_entry.data[CONF_BRAND]),
+            str(self._config_entry.data[CONF_MODEL]),
+        )
+        supported_steps = _supported_temp_step_options(device)
 
         if user_input is not None:
             selected_step = str(user_input[CONF_TEMP_STEP])
@@ -435,16 +360,16 @@ class IrRemoteHvacOptionsFlow(OptionsFlow):
                     CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID
                 )
                 if current_temperature_sensor_entity_id:
-                    normalized[CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID] = (
-                        current_temperature_sensor_entity_id
-                    )
+                    normalized[
+                        CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID
+                    ] = current_temperature_sensor_entity_id
                 current_humidity_sensor_entity_id = user_input.get(
                     CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID
                 )
                 if current_humidity_sensor_entity_id:
-                    normalized[CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID] = (
-                        current_humidity_sensor_entity_id
-                    )
+                    normalized[
+                        CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID
+                    ] = current_humidity_sensor_entity_id
                 power_sensor_entity_id = user_input.get(CONF_POWER_SENSOR_ENTITY_ID)
                 if power_sensor_entity_id:
                     normalized[CONF_POWER_SENSOR_ENTITY_ID] = power_sensor_entity_id

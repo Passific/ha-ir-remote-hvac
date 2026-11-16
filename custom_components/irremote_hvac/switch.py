@@ -72,6 +72,11 @@ class IrRemoteHvacPowerSwitch(SwitchEntity):
         )
 
     @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Allow the entity ID to change without removing the entity."""
+        super().async_entity_id_changed(old_entity_id)
+
+    @callback
     def _handle_climate_updated(self) -> None:
         """Refresh switch state when the paired climate entity changes."""
         self.async_write_ha_state()

@@ -4,11 +4,23 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
+import pytest
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.irremote_hvac import async_setup_entry, async_unload_entry
-from custom_components.irremote_hvac.const import DOMAIN
+from custom_components.irremote_hvac import (
+    async_migrate_entry,
+    async_setup_entry,
+    async_unload_entry,
+)
+from custom_components.irremote_hvac.const import (
+    CONF_BRAND,
+    CONF_EMITTER_ENTITY_ID,
+    CONF_MODEL,
+    CONF_LEGACY_PROTOCOL,
+    DOMAIN,
+)
 
 
 async def test_setup_and_unload_entry(hass: HomeAssistant) -> None:
@@ -16,13 +28,66 @@ async def test_setup_and_unload_entry(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     hass.config_entries.async_forward_entry_setups = AsyncMock()
-    hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
+    hass.config_entries.async_unload_platforms_or_raise = AsyncMock()
 
-    assert await async_setup_entry(hass, entry) is True
+    assert await async_setup_entry(hass, entry) is None
     hass.config_entries.async_forward_entry_setups.assert_awaited_once()
 
-    assert await async_unload_entry(hass, entry) is True
-    hass.config_entries.async_unload_platforms.assert_awaited_once()
+    assert await async_unload_entry(hass, entry) is None
+    hass.config_entries.async_unload_platforms_or_raise.assert_awaited_once()
+
+
+async def test_failed_unload_preserves_runtime_data(hass: HomeAssistant) -> None:
+    """Keep runtime data when Home Assistant cannot unload the platforms."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    hass.data[DOMAIN] = {entry.entry_id: object()}
+    hass.config_entries.async_unload_platforms_or_raise = AsyncMock(
+        side_effect=ConfigEntryError("Unable to unload")
+    )
+
+    with pytest.raises(ConfigEntryError):
+        await async_unload_entry(hass, entry)
+    assert entry.entry_id in hass.data[DOMAIN]
+
+
+async def test_setup_migrates_legacy_device_selection(hass: HomeAssistant) -> None:
+    """Migrate an unambiguous pyhvac 0.1 config entry without changing its ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="infrared.emitter_AIRTON_-1",
+        data={
+            CONF_EMITTER_ENTITY_ID: "infrared.emitter",
+            CONF_LEGACY_PROTOCOL: "AIRTON",
+            CONF_MODEL: -1,
+        },
+    )
+    entry.add_to_hass(hass)
+    hass.config_entries.async_forward_entry_setups = AsyncMock()
+
+    assert await async_setup_entry(hass, entry) is None
+
+    assert entry.data[CONF_BRAND] == "Airton"
+    assert entry.data[CONF_MODEL] == "AIRTON protocol"
+    assert CONF_LEGACY_PROTOCOL not in entry.data
+    assert entry.unique_id == "infrared.emitter_AIRTON_-1"
+    assert entry.version == 2
+
+
+async def test_unmappable_legacy_entry_raises_config_entry_error(
+    hass: HomeAssistant,
+) -> None:
+    """Expose a migration failure without replacing the saved configuration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LEGACY_PROTOCOL: "AIRTON", CONF_MODEL: 123},
+    )
+    entry.add_to_hass(hass)
+
+    with pytest.raises(ConfigEntryError) as exc_info:
+        await async_migrate_entry(hass, entry)
+
+    assert exc_info.value.translation_key == "legacy_device_migration"
+    assert entry.data[CONF_LEGACY_PROTOCOL] == "AIRTON"
 
 
 async def test_options_update_reloads_entry(hass: HomeAssistant) -> None:
