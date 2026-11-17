@@ -9,31 +9,30 @@
           "emitter_entity_id": "Entite emetteur IR"
         }
       },
-      "protocol": {
-        "title": "IR Remote HVAC - Protocole",
-        "description": "Selectionnez le protocole IR de votre marque de climatisation. La plupart des utilisateurs peuvent conserver les parametres par defaut. Activez les parametres avances uniquement si votre appareil necessite une variante de modele.",
+      "brand": {
+        "title": "IR Remote HVAC - Marque",
+        "description": "Selectionnez la marque du systeme HVAC, puis le modele correspondant.",
         "data": {
-          "protocol": "Marque / protocole de climatisation",
-          "show_advanced": "Afficher les parametres avances (modele)"
+          "brand": "Marque HVAC"
         }
       },
-      "advanced": {
-        "title": "IR Remote HVAC - Avance",
-        "description": "Modifiez cette valeur uniquement si necessaire. Laissez le modele a -1 pour un comportement automatique/par defaut. La frequence porteuse est derivee du modele selectionne.",
+      "model": {
+        "title": "IR Remote HVAC - Modele",
+        "description": "Selectionnez le modele ou la telecommande correspondant a votre appareil HVAC.",
         "data": {
-          "model": "Variante de modele (-1 = par defaut)"
+          "model": "Modele / telecommande HVAC"
         }
       },
       "temp_step": {
         "title": "IR Remote HVAC - Pas de temperature",
-        "description": "Choisissez le pas de temperature pris en charge par le protocole/modele selectionne.",
+        "description": "Choisissez le pas de temperature pris en charge par le modele selectionne.",
         "data": {
           "temp_step": "Pas de temperature"
         }
       },
       "reconfigure": {
         "title": "IR Remote HVAC - Reconfigurer",
-        "description": "Mettez a jour le nom de l'appareil et l'emetteur IR, puis selectionnez les parametres du protocole.",
+        "description": "Mettez a jour le nom de l'appareil et l'emetteur IR, puis selectionnez la marque et le modele HVAC.",
         "data": {
           "name": "Nom de l'appareil",
           "emitter_entity_id": "Entite emetteur IR"
@@ -45,9 +44,9 @@
       "pyhvac_not_installed": "La bibliotheque pyhvac n'est pas installee. Verifiez votre installation Home Assistant."
     },
     "error": {
-      "invalid_protocol": "Le protocole selectionne n'est pas reconnu.",
-      "protocol_unavailable": "La constante du protocole selectionne n'est pas disponible dans la version installee de pyhvac. Essayez de mettre a niveau pyhvac.",
-      "invalid_temp_step": "Le pas de temperature selectionne n'est pas pris en charge pour ce protocole/modele."
+      "invalid_brand": "La marque HVAC selectionnee n'est pas reconnue.",
+      "invalid_model": "Le modele selectionne n'est pas disponible pour cette marque.",
+      "invalid_temp_step": "Le pas de temperature selectionne n'est pas pris en charge pour ce modele."
     }
   },
   "options": {
@@ -70,6 +69,11 @@
     "error": {
       "invalid_temp_range": "La temperature minimale doit etre inferieure a la temperature maximale.",
       "invalid_temp_step": "Le pas de temperature selectionne n'est pas pris en charge pour ce protocole/modele."
+    }
+  },
+  "exceptions": {
+    "legacy_device_migration": {
+      "message": "L'appareil enregistre ne peut pas etre migre automatiquement. Reconfigurez l'entree et selectionnez sa marque et son modele."
     }
   },
   "issues": {

@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from homeassistant.exceptions import PlatformNotReady
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.irremote_hvac.const import DOMAIN
 from custom_components.irremote_hvac.switch import (

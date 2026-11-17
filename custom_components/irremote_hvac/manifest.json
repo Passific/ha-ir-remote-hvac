@@ -1,6 +1,7 @@
 {
   "domain": "irremote_hvac",
   "name": "IR Remote HVAC",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@Passific"],
   "config_flow": true,
   "dependencies": ["infrared"],
@@ -9,6 +10,6 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/Passific/ha-ir-remote-hvac/issues",
   "quality_scale": "platinum",
-  "requirements": ["pyhvac>=0.1.6,<0.2.0", "infrared-protocols>=9.0.0"],
+  "requirements": ["pyhvac>=0.2.0,<0.3.0"],
   "version": "0.0.1"
 }
