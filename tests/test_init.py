@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import issue_registry as ir
 from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.irremote_hvac import (
@@ -88,6 +89,48 @@ async def test_unmappable_legacy_entry_raises_config_entry_error(
 
     assert exc_info.value.translation_key == "legacy_device_migration"
     assert entry.data[CONF_LEGACY_PROTOCOL] == "AIRTON"
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, f"{entry.entry_id}_legacy_device_migration"
+    )
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_key == "legacy_device_migration"
+    assert issue.translation_placeholders == {"name": entry.title}
+
+
+@pytest.mark.parametrize("reconfigure", [False, True])
+async def test_resolved_migration_clears_repair(
+    hass: HomeAssistant, reconfigure: bool
+) -> None:
+    """Clear a failed-migration repair on retry or setup after reconfiguration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_LEGACY_PROTOCOL: "AIRTON", CONF_MODEL: 123},
+    )
+    entry.add_to_hass(hass)
+    with pytest.raises(ConfigEntryError):
+        await async_migrate_entry(hass, entry)
+
+    issue_id = f"{entry.entry_id}_legacy_device_migration"
+    registry = ir.async_get(hass)
+    assert registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    if reconfigure:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={CONF_BRAND: "Airton", CONF_MODEL: "AIRTON protocol"},
+            version=2,
+        )
+        hass.config_entries.async_forward_entry_setups = AsyncMock()
+        await async_setup_entry(hass, entry)
+    else:
+        hass.config_entries.async_update_entry(
+            entry, data={CONF_LEGACY_PROTOCOL: "AIRTON", CONF_MODEL: -1}
+        )
+        await async_migrate_entry(hass, entry)
+
+    assert registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_options_update_reloads_entry(hass: HomeAssistant) -> None:

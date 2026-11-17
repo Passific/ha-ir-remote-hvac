@@ -54,6 +54,8 @@ You will need to provide:
 
 You can reconfigure an existing entry from the Home Assistant integration page to change the device name, IR emitter, brand, model, or temperature step. The options flow lets you adjust temperature range, debounce delay, optional sensor entities, and the power threshold. Some legacy protocol/model entries cannot be mapped safely; reconfigure those entries and select the correct brand and remote.
 
+If automatic migration fails, a repair issue explains how to reconfigure the affected entry. It clears after successful migration or reconfiguration.
+
 ## Supported Devices And Functions
 
 This integration uses pyhvac 0.2's brand/model registry and sends generated raw IR signals through Home Assistant infrared emitters. The available modes and controls depend on the selected device capabilities.
