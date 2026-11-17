@@ -360,16 +360,16 @@ class IrRemoteHvacOptionsFlow(OptionsFlow):
                     CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID
                 )
                 if current_temperature_sensor_entity_id:
-                    normalized[
-                        CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID
-                    ] = current_temperature_sensor_entity_id
+                    normalized[CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID] = (
+                        current_temperature_sensor_entity_id
+                    )
                 current_humidity_sensor_entity_id = user_input.get(
                     CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID
                 )
                 if current_humidity_sensor_entity_id:
-                    normalized[
-                        CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID
-                    ] = current_humidity_sensor_entity_id
+                    normalized[CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID] = (
+                        current_humidity_sensor_entity_id
+                    )
                 power_sensor_entity_id = user_input.get(CONF_POWER_SENSOR_ENTITY_ID)
                 if power_sensor_entity_id:
                     normalized[CONF_POWER_SENSOR_ENTITY_ID] = power_sensor_entity_id
