@@ -56,10 +56,10 @@ from pyhvac.ir.formats import to_raw
 from pyhvac.state import HvacState
 
 from .const import (
+    CONF_BRAND,
     CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID,
     CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID,
     CONF_DEBOUNCE_DELAY,
-    CONF_BRAND,
     CONF_EMITTER_ENTITY_ID,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,

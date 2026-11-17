@@ -6,8 +6,8 @@ import pytest
 
 from custom_components.irremote_hvac.const import (
     CONF_BRAND,
-    CONF_MODEL,
     CONF_LEGACY_PROTOCOL,
+    CONF_MODEL,
 )
 from custom_components.irremote_hvac.pyhvac_helpers import migrate_legacy_device
 

@@ -85,7 +85,7 @@ After setup, add the climate entity to a standard Home Assistant thermostat card
 
 ## Development
 
-Run the test suite with the Home Assistant test harness. Home Assistant 2026.3 and later require Python 3.14.2 or newer.
+Run the tests on Linux with Python 3.14.2 or newer:
 
 ```bash
 uv venv --python 3.14.2 .venv

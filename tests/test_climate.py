@@ -14,8 +14,8 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import State
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pyhvac import registry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.irremote_hvac import climate
 from custom_components.irremote_hvac.climate import (

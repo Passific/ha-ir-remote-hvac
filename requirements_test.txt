@@ -1,4 +1,4 @@
-pytest-homeassistant-custom-component==0.13.358
+pytest-homeassistant[infrared]~=2026.11.0
 infrared-protocols>=9.0.0
 pyhvac==0.2.0
 ruff==0.16.5

@@ -21,10 +21,10 @@ from homeassistant.helpers import selector
 from pyhvac import registry
 
 from .const import (
+    CONF_BRAND,
     CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID,
     CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID,
     CONF_DEBOUNCE_DELAY,
-    CONF_BRAND,
     CONF_EMITTER_ENTITY_ID,
     CONF_LEGACY_PROTOCOL,
     CONF_MAX_TEMP,
