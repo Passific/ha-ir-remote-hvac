@@ -7,6 +7,7 @@ import importlib
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import issue_registry as ir
 
 from .const import CONF_LEGACY_PROTOCOL, DOMAIN
 from .pyhvac_helpers import migrate_legacy_device
@@ -18,6 +19,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up IR Remote HVAC from a config entry."""
     if CONF_LEGACY_PROTOCOL in entry.data:
         await async_migrate_entry(hass, entry)
+
+    ir.async_delete_issue(hass, DOMAIN, f"{entry.entry_id}_legacy_device_migration")
 
     for platform in PLATFORMS:
         await hass.async_add_executor_job(
@@ -36,12 +39,23 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     try:
         data = migrate_legacy_device(dict(entry.data))
     except ValueError as err:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"{entry.entry_id}_legacy_device_migration",
+            config_entry_id=entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="legacy_device_migration",
+            translation_placeholders={"name": entry.title},
+        )
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="legacy_device_migration",
         ) from err
 
     hass.config_entries.async_update_entry(entry, data=data, version=2)
+    ir.async_delete_issue(hass, DOMAIN, f"{entry.entry_id}_legacy_device_migration")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

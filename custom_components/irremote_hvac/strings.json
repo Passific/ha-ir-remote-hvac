@@ -77,6 +77,10 @@
     }
   },
   "issues": {
+    "legacy_device_migration": {
+      "title": "Reconfigure {name} after the pyhvac upgrade",
+      "description": "The saved device for {name} could not be migrated automatically to pyhvac 0.2. Open Settings > Devices & services > IR Remote HVAC, select Reconfigure from this entry's menu, and choose the correct HVAC brand and model or remote. The integration cannot start until this is resolved. After reconfiguring, verify that your HVAC works as expected."
+    },
     "external_entity_unavailable": {
       "title": "Configured external entity unavailable",
       "description": "The configured %(role)s (%(entity_id)s) is unavailable or missing. Check that the source integration/device is online, or update IR Remote HVAC options to select another entity."

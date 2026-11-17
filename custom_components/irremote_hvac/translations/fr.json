@@ -77,6 +77,10 @@
     }
   },
   "issues": {
+    "legacy_device_migration": {
+      "title": "Reconfigurez {name} apres la mise a jour de pyhvac",
+      "description": "L'appareil enregistre pour {name} n'a pas pu etre migre automatiquement vers pyhvac 0.2. Ouvrez Parametres > Appareils et services > IR Remote HVAC, selectionnez Reconfigurer dans le menu de cette entree, puis choisissez la marque et le modele ou la telecommande HVAC correspondants. L'integration ne peut pas demarrer tant que ce probleme n'est pas resolu. Apres la reconfiguration, verifiez le bon fonctionnement de votre appareil HVAC."
+    },
     "external_entity_unavailable": {
       "title": "Entite externe configuree indisponible",
       "description": "Le %(role)s configure (%(entity_id)s) est indisponible ou introuvable. Verifiez que l'integration/appareil source est en ligne, ou mettez a jour les options IR Remote HVAC pour selectionner une autre entite."
