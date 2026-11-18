@@ -46,6 +46,13 @@
           "current_humidity_sensor_entity_id": "Entite capteur d'humidite actuelle",
           "power_sensor_entity_id": "Entite capteur de puissance"
         }
+      },
+      "power_threshold": {
+        "title": "IR Remote HVAC - Seuil de puissance",
+        "description": "Mesure du capteur à l'ouverture de cette étape : **{power_reading}** (— si indisponible).\n\nQuand l'appareil est allume, une mesure sous ce seuil indique qu'il est au repos. Le seuil par defaut est de {default_threshold} W. Gardez cette valeur ou saisissez un seuil entre la puissance au repos et la puissance en fonctionnement.",
+        "data": {
+          "power_threshold": "Seuil de puissance"
+        }
       }
     },
     "abort": {

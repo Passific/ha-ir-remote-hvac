@@ -47,7 +47,7 @@ Set up the integration from the Home Assistant UI.
 
 1. Select the HVAC brand, then choose its model or remote control. Remote entries are marked **(remote)**.
 2. Keep the suggested device name or enter your own, then select the IR emitter that reaches the unit.
-3. Optionally select temperature, humidity, and power sensors. You can leave them blank.
+3. Optionally select temperature, humidity, and power sensors. If you select a power sensor, the threshold step shows its latest reading when the step opens and the default threshold (**10 W**). While the unit is on, a reading below the threshold is reported as idle.
 
 Setup warns if another IR Remote HVAC unit already has the selected device name. Identical units with different IR emitters can keep the same name. If they are in different rooms, assign them to different Home Assistant areas to tell them apart.
 

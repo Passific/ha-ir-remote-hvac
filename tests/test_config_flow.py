@@ -21,6 +21,8 @@ from custom_components.irremote_hvac.const import (
     CONF_EMITTER_ENTITY_ID,
     CONF_LEGACY_PROTOCOL,
     CONF_MODEL,
+    CONF_POWER_SENSOR_ENTITY_ID,
+    CONF_POWER_THRESHOLD,
     CONF_TEMP_STEP,
     DEFAULT_TEMP_STEP,
     DOMAIN,
@@ -45,12 +47,43 @@ async def test_user_step_aborts_when_no_emitters(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sensors", [{}, {CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID: "sensor.room"}]
+    ("sensors", "threshold_input", "expected_threshold", "power_state", "reading"),
+    [
+        ({}, None, None, None, None),
+        (
+            {CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID: "sensor.room"},
+            None,
+            None,
+            None,
+            None,
+        ),
+        ({CONF_POWER_SENSOR_ENTITY_ID: "sensor.watts"}, {}, 10.0, "15.2", "15.2 W"),
+        (
+            {CONF_POWER_SENSOR_ENTITY_ID: "sensor.watts"},
+            {CONF_POWER_THRESHOLD: 35.5},
+            35.5,
+            "unavailable",
+            "—",
+        ),
+    ],
 )
-async def test_full_config_flow_creates_entry(hass: HomeAssistant, sensors) -> None:
-    """Setup starts with the brand and allows sensors to be skipped or saved."""
+async def test_full_config_flow_creates_entry(
+    hass: HomeAssistant,
+    sensors,
+    threshold_input,
+    expected_threshold,
+    power_state,
+    reading,
+) -> None:
+    """Setup asks about the threshold only if a power sensor is selected."""
     hass.states.async_set("infrared.living_room", "available")
     hass.states.async_set("sensor.room", "22")
+    if power_state is not None:
+        hass.states.async_set(
+            "sensor.watts",
+            power_state,
+            {"device_class": "power", "unit_of_measurement": "W"},
+        )
     with patch.object(config_flow.infrared, "async_get_emitters", _emitters):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -86,10 +119,19 @@ async def test_full_config_flow_creates_entry(hass: HomeAssistant, sensors) -> N
             user_input={CONF_EMITTER_ENTITY_ID: "infrared.living_room"},
         )
         assert result["step_id"] == "sensors"
-        assert result["last_step"] is True
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=sensors
         )
+        if threshold_input is not None:
+            assert result["step_id"] == "power_threshold"
+            assert result["last_step"] is True
+            assert result["description_placeholders"] == {
+                "default_threshold": "10",
+                "power_reading": reading,
+            }
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input=threshold_input
+            )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Airspool AIRSPOOL protocol"
@@ -100,7 +142,10 @@ async def test_full_config_flow_creates_entry(hass: HomeAssistant, sensors) -> N
     assert (
         result["result"].unique_id == "infrared.living_room_Airspool_AIRSPOOL protocol"
     )
-    assert result["result"].options == sensors
+    expected_options = dict(sensors)
+    if expected_threshold is not None:
+        expected_options[CONF_POWER_THRESHOLD] = expected_threshold
+    assert result["result"].options == expected_options
 
     registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(registry, result["result"].entry_id)
@@ -110,7 +155,7 @@ async def test_full_config_flow_creates_entry(hass: HomeAssistant, sensors) -> N
     }
 
     configure = await hass.config_entries.options.async_init(result["result"].entry_id)
-    if sensors:
+    if CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID in sensors:
         sensor_field = next(
             field
             for field in configure["data_schema"].schema
@@ -123,6 +168,8 @@ async def test_full_config_flow_creates_entry(hass: HomeAssistant, sensors) -> N
     assert configure["type"] is FlowResultType.CREATE_ENTRY
     assert configure["data"][CONF_DEBOUNCE_DELAY] == 1.5
     assert CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID not in configure["data"]
+    if expected_threshold is not None:
+        assert configure["data"][CONF_POWER_THRESHOLD] == expected_threshold
     await hass.async_block_till_done()
     assert await hass.config_entries.async_unload(result["result"].entry_id)
 

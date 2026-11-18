@@ -46,6 +46,13 @@
           "current_humidity_sensor_entity_id": "Current humidity sensor entity",
           "power_sensor_entity_id": "Power sensor entity"
         }
+      },
+      "power_threshold": {
+        "title": "IR Remote HVAC - Power threshold",
+        "description": "Sensor reading when this step opened: **{power_reading}** (— if unavailable).\n\nWhile the unit is on, a reading below this threshold is reported as idle. The default is {default_threshold} W. Keep it or enter a value between your unit's idle and active power draw.",
+        "data": {
+          "power_threshold": "Power threshold"
+        }
       }
     },
     "abort": {

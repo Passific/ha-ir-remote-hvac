@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from math import isfinite
 from typing import Any
 
 import voluptuous as vol
@@ -16,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from pyhvac import brands, registry
@@ -70,6 +71,19 @@ def _sensor_fields() -> dict[vol.Optional, selector.EntitySelector]:
     }
 
 
+def _power_threshold_selector() -> selector.NumberSelector:
+    """Return the wattage selector used by setup and Configure."""
+    return selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0.0,
+            max=10000.0,
+            step=0.1,
+            unit_of_measurement="W",
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    )
+
+
 def _temp_step_to_selector_value(temp_step: Any) -> str:
     """Convert a stored temp step value to a valid selector option key."""
     try:
@@ -107,6 +121,7 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         self._data: dict[str, Any] = {}
+        self._sensor_options: dict[str, Any] = {}
         self._warned_name: str | None = None
 
     async def async_step_user(
@@ -298,10 +313,51 @@ class IrRemoteHvacConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="sensors",
                 data_schema=vol.Schema(_sensor_fields()),
+            )
+        if CONF_POWER_SENSOR_ENTITY_ID in user_input:
+            self._sensor_options = user_input
+            return await self.async_step_power_threshold()
+        return self.async_create_entry(
+            title=self._data[CONF_NAME], data=self._data, options=user_input
+        )
+
+    async def async_step_power_threshold(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask how much power the unit draws before it counts as active."""
+        if user_input is None:
+            state = self.hass.states.get(
+                self._sensor_options[CONF_POWER_SENSOR_ENTITY_ID]
+            )
+            reading = "—"
+            if state is not None:
+                try:
+                    value = float(state.state)
+                except ValueError:
+                    pass
+                else:
+                    if isfinite(value):
+                        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                        reading = f"{state.state} {unit}" if unit else state.state
+            return self.async_show_form(
+                step_id="power_threshold",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_POWER_THRESHOLD, default=DEFAULT_POWER_THRESHOLD
+                        ): _power_threshold_selector(),
+                    }
+                ),
+                description_placeholders={
+                    "default_threshold": f"{DEFAULT_POWER_THRESHOLD:g}",
+                    "power_reading": reading,
+                },
                 last_step=True,
             )
         return self.async_create_entry(
-            title=self._data[CONF_NAME], data=self._data, options=user_input
+            title=self._data[CONF_NAME],
+            data=self._data,
+            options={**self._sensor_options, **user_input},
         )
 
     def _device_already_configured(self, unique_id: str) -> bool:
@@ -445,15 +501,7 @@ class IrRemoteHvacOptionsFlow(OptionsFlow):
                     default=float(
                         current.get(CONF_POWER_THRESHOLD, DEFAULT_POWER_THRESHOLD)
                     ),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0.0,
-                        max=10000.0,
-                        step=0.1,
-                        unit_of_measurement="W",
-                        mode=selector.NumberSelectorMode.BOX,
-                    )
-                ),
+                ): _power_threshold_selector(),
             }
         )
 
