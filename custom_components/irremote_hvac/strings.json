@@ -90,6 +90,21 @@
     "switch": {
       "power": {
         "name": ""
+      },
+      "light": {
+        "name": "Display light"
+      },
+      "cleaning": {
+        "name": "Self-cleaning"
+      },
+      "purifier": {
+        "name": "Air purifier"
+      },
+      "sleep": {
+        "name": "Sleep"
+      },
+      "power_limit": {
+        "name": "Power limit"
       }
     }
   }

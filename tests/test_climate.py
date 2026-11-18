@@ -167,6 +167,40 @@ def test_restore_from_last_state_recovers_pyhvac_previous_state(monkeypatch) -> 
     assert entity._last_command_state.to_dict() == saved_state
 
 
+async def test_accessory_survives_climate_changes_and_restore(monkeypatch) -> None:
+    """Subsequent climate commands retain successfully sent accessory settings."""
+    entity = _build_entity(monkeypatch)
+    entity._send_command = AsyncMock()
+    await entity.async_set_hvac_mode(HVACMode.HEAT)
+    await entity.async_set_feature("purifier", True)
+    assert await entity._send_ir_command_now() is True
+
+    await entity.async_set_temperature(temperature=25)
+    assert await entity._send_ir_command_now() is True
+    assert entity._last_command_state.features["purifier"] is True
+
+    restored = _build_entity(monkeypatch)
+    restored._restore_from_last_state(
+        SimpleNamespace(state=HVACMode.HEAT, attributes=entity.extra_state_attributes)
+    )
+    assert restored.is_feature_on("purifier") is True
+    assert restored._build_target_state().features["purifier"] is True
+
+
+async def test_failed_accessory_send_reverts_switch_state(monkeypatch) -> None:
+    """An accessory change that failed to send must not appear enabled."""
+    entity = _build_entity(monkeypatch)
+    entity._pending_send_generation = 1
+    entity._send_ir_command_now = AsyncMock(return_value=False)
+    await entity.async_set_feature("purifier", True)
+    assert entity.is_feature_on("purifier") is True
+
+    await entity._debounced_send(1)
+
+    assert entity.is_feature_on("purifier") is False
+    assert entity._build_target_state().features["purifier"] is False
+
+
 @pytest.mark.parametrize("has_unit", [False, True])
 async def test_restores_fahrenheit_target_in_native_unit(
     hass, monkeypatch, has_unit

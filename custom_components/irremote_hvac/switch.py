@@ -1,9 +1,8 @@
-"""Switch entity mirroring and controlling the IR Remote HVAC power state."""
+"""Power and accessory switches for IR Remote HVAC."""
 
 from __future__ import annotations
 
-import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, SIGNAL_HVAC_STATE_UPDATED
 
-_LOGGER = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from .climate import IrRemoteHvacClimate
 
 
 async def async_setup_entry(
@@ -28,32 +28,31 @@ async def async_setup_entry(
     if climate_entity is None:
         raise PlatformNotReady("Waiting for IR HVAC climate entity")
 
-    async_add_entities([IrRemoteHvacPowerSwitch(config_entry, climate_entity)])
+    async_add_entities(
+        [
+            IrRemoteHvacPowerSwitch(config_entry, climate_entity),
+            *(
+                IrRemoteHvacFeatureSwitch(config_entry, climate_entity, feature)
+                for feature in climate_entity.switch_features
+            ),
+        ]
+    )
 
 
-class IrRemoteHvacPowerSwitch(SwitchEntity):
-    """Switch that mirrors and controls the power state of the paired climate entity.
-
-    Talks to the climate entity directly (rather than via entity_id/service
-    calls) so it works regardless of entity registration ordering.
-    """
+class _IrRemoteHvacSwitch(SwitchEntity):
+    """A switch backed by the paired climate entity."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False
-    _attr_translation_key = "power"
 
-    def __init__(self, config_entry: ConfigEntry, climate_entity: Any) -> None:
+    def __init__(
+        self, config_entry: ConfigEntry, climate_entity: IrRemoteHvacClimate
+    ) -> None:
         self._climate_entity = climate_entity
         self._entry_id = config_entry.entry_id
-        self._attr_unique_id = f"{config_entry.entry_id}_power"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
         )
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if the paired climate entity is currently on."""
-        return self._climate_entity.is_on
 
     @property
     def available(self) -> bool:
@@ -81,6 +80,23 @@ class IrRemoteHvacPowerSwitch(SwitchEntity):
         """Refresh switch state when the paired climate entity changes."""
         self.async_write_ha_state()
 
+
+class IrRemoteHvacPowerSwitch(_IrRemoteHvacSwitch):
+    """Mirror and control the power state of the paired climate entity."""
+
+    _attr_translation_key = "power"
+
+    def __init__(
+        self, config_entry: ConfigEntry, climate_entity: IrRemoteHvacClimate
+    ) -> None:
+        super().__init__(config_entry, climate_entity)
+        self._attr_unique_id = f"{config_entry.entry_id}_power"
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the paired climate entity is currently on."""
+        return self._climate_entity.is_on
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the HVAC on using its last active mode."""
         await self._climate_entity.async_turn_on()
@@ -88,3 +104,31 @@ class IrRemoteHvacPowerSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the HVAC off."""
         await self._climate_entity.async_turn_off()
+
+
+class IrRemoteHvacFeatureSwitch(_IrRemoteHvacSwitch):
+    """Mirror and control one on/off accessory feature."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        climate_entity: IrRemoteHvacClimate,
+        feature: str,
+    ) -> None:
+        super().__init__(config_entry, climate_entity)
+        self._feature = feature
+        self._attr_translation_key = feature
+        self._attr_unique_id = f"{config_entry.entry_id}_{feature}"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the feature state tracked by the climate entity."""
+        return self._climate_entity.is_feature_on(self._feature)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable the accessory feature."""
+        await self._climate_entity.async_set_feature(self._feature, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable the accessory feature."""
+        await self._climate_entity.async_set_feature(self._feature, False)

@@ -103,6 +103,21 @@
     "switch": {
       "power": {
         "name": ""
+      },
+      "light": {
+        "name": "Éclairage de l’écran"
+      },
+      "cleaning": {
+        "name": "Autonettoyage"
+      },
+      "purifier": {
+        "name": "Purificateur d’air"
+      },
+      "sleep": {
+        "name": "Mode nuit"
+      },
+      "power_limit": {
+        "name": "Limitation de puissance"
       }
     }
   }

@@ -13,6 +13,7 @@ Home Assistant custom integration for IR-controlled HVAC units using the pure-Py
 
 - Control HVAC power and operating mode.
 - Set target temperature, fan mode, swing mode, and presets when supported by the selected brand/model.
+- Control display light, self-cleaning, air purifier, sleep, and power limit with separate switches when the selected model supports those features as on/off settings.
 - Restore the last known AC state after a Home Assistant restart.
 - Optional temperature, humidity, and power sensor inputs for richer state and availability handling.
 

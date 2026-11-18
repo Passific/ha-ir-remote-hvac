@@ -89,6 +89,8 @@ _LOGGER = logging.getLogger(__name__)
 _FAN_MODE_RANKS = [FAN_MIN, FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_MAX]
 _FAN_MODES = [FAN_AUTO, *_FAN_MODE_RANKS]
 
+_SWITCH_FEATURES = ("light", "cleaning", "purifier", "sleep", "power_limit")
+
 _HA_TO_PYHVAC_MODE = {
     HVACMode.AUTO: "auto",
     HVACMode.COOL: "cool",
@@ -317,6 +319,17 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreClimate):
         self._attr_preset_mode = (
             PRESET_NONE if PRESET_NONE in self._attr_preset_modes else None
         )
+
+        self._switch_feature_states: dict[str, bool] = {}
+        for feature in _SWITCH_FEATURES:
+            choice = device.capabilities.features.get(feature)
+            if (
+                choice is not None
+                and len(choice.values) == 2
+                and any(value is False for value in choice.values)
+                and any(value is True for value in choice.values)
+            ):
+                self._switch_feature_states[feature] = False
 
         temperature_range = device.capabilities.temperature
         min_temp = max(min_temp, temperature_range.min)
@@ -709,6 +722,11 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreClimate):
                 self._last_command_state = HvacState.from_dict(saved_device_state)
             except ValueError as err:
                 _LOGGER.debug("Ignoring invalid restored pyhvac state: %s", err)
+            else:
+                for feature in self._switch_feature_states:
+                    self._switch_feature_states[feature] = (
+                        self._last_command_state.features.get(feature) is True
+                    )
 
         self.async_write_ha_state()
 
@@ -722,6 +740,7 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreClimate):
             "preset_mode": self._attr_preset_mode,
             "last_on_hvac_mode": self._last_on_hvac_mode,
             "pyhvac_state": self._last_command_state,
+            "switch_features": self._switch_feature_states.copy(),
         }
 
     def _apply_runtime_state_snapshot(self, snapshot: dict[str, Any]) -> None:
@@ -733,6 +752,7 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreClimate):
         self._attr_preset_mode = snapshot["preset_mode"]
         self._last_on_hvac_mode = snapshot["last_on_hvac_mode"]
         self._last_command_state = snapshot["pyhvac_state"]
+        self._switch_feature_states = snapshot["switch_features"].copy()
 
     def _detect_supported_hvac_modes(self) -> list[HVACMode]:
         """Detect HVAC modes supported by the selected device."""
@@ -906,6 +926,7 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreClimate):
         if selected_preset is not None:
             feature, value = selected_preset
             features[feature] = value
+        features.update(self._switch_feature_states)
 
         return HvacState(
             power=self._attr_hvac_mode != HVACMode.OFF,
@@ -1034,6 +1055,23 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreClimate):
             return
 
         self._attr_preset_mode = preset_mode
+        self.async_write_ha_state()
+        self._schedule_ir_send()
+
+    @property
+    def switch_features(self) -> tuple[str, ...]:
+        """Return the supported accessory switches."""
+        return tuple(self._switch_feature_states)
+
+    def is_feature_on(self, feature: str) -> bool:
+        """Return the state of a supported accessory switch."""
+        return self._switch_feature_states[feature]
+
+    async def async_set_feature(self, feature: str, enabled: bool) -> None:
+        """Update an accessory through the same IR pipeline as climate controls."""
+        if self._switch_feature_states[feature] == enabled:
+            return
+        self._switch_feature_states[feature] = enabled
         self.async_write_ha_state()
         self._schedule_ir_send()
 
