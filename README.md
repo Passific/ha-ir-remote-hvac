@@ -45,14 +45,13 @@ Home Assistant custom integration for IR-controlled HVAC units using the pure-Py
 
 Set up the integration from the Home Assistant UI.
 
-You will need to provide:
+1. Select the HVAC brand, then choose its model or remote control. Remote entries are marked **(remote)**.
+2. Keep the suggested device name or enter your own, then select the IR emitter that reaches the unit.
+3. Optionally select temperature, humidity, and power sensors. You can leave them blank.
 
-- An IR emitter entity
-- The HVAC brand and matching model or remote
-- Optional temperature, humidity, and power sensors
-- Optional timing and temperature range options
+Setup warns if another IR Remote HVAC unit already has the selected device name. Identical units with different IR emitters can keep the same name. If they are in different rooms, assign them to different Home Assistant areas to tell them apart.
 
-You can reconfigure an existing entry from the Home Assistant integration page to change the device name, IR emitter, brand, model, or temperature step. The options flow lets you adjust temperature range, debounce delay, optional sensor entities, and the power threshold. Some legacy protocol/model entries cannot be mapped safely; reconfigure those entries and select the correct brand and remote.
+Use **Configure** to change the sensors, temperature range or step, send debounce delay, or power threshold. Use **Reconfigure** to change the brand, model or remote, device name, or IR emitter without creating a new entry. Some legacy protocol/model entries cannot be mapped safely; reconfigure those entries and select the correct brand and remote.
 
 If automatic migration fails, a repair issue explains how to reconfigure the affected entry. It clears after successful migration or reconfiguration.
 

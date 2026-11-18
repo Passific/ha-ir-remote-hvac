@@ -2,14 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "IR Remote HVAC - Emitter",
-        "description": "Give the device a name and select the IR emitter entity that will transmit commands to the AC unit.",
-        "data": {
-          "name": "Device name",
-          "emitter_entity_id": "IR emitter entity"
-        }
-      },
-      "brand": {
         "title": "IR Remote HVAC - Brand",
         "description": "Select the HVAC brand, then choose the matching model.",
         "data": {
@@ -18,24 +10,41 @@
       },
       "model": {
         "title": "IR Remote HVAC - Model",
-        "description": "Select the model or remote that matches your HVAC unit.",
+        "description": "Select the model that matches your HVAC unit. Entries marked (remote) are remote controls.",
         "data": {
           "model": "HVAC model / remote"
         }
       },
-      "temp_step": {
-        "title": "IR Remote HVAC - Temperature Step",
-        "description": "Choose the temperature step supported by your selected model.",
-        "data": {
-          "temp_step": "Temperature step"
-        }
-      },
       "reconfigure": {
         "title": "IR Remote HVAC - Reconfigure",
-        "description": "Update the device name and IR emitter, then select the HVAC brand and model.",
+        "description": "Confirm or update the HVAC brand, then choose its model or remote.",
+        "data": {
+          "brand": "HVAC brand"
+        }
+      },
+      "device": {
+        "title": "IR Remote HVAC - Name and emitter",
+        "description": "Keep the suggested name or enter your own, then select the IR emitter that reaches the HVAC unit.",
         "data": {
           "name": "Device name",
           "emitter_entity_id": "IR emitter entity"
+        }
+      },
+      "device_name_in_use": {
+        "title": "IR Remote HVAC - Name already in use",
+        "description": "Another IR Remote HVAC unit has this device name. You can keep it and assign the units to different areas in Home Assistant if they are in different rooms. Select the IR emitter that reaches this unit.",
+        "data": {
+          "name": "Device name",
+          "emitter_entity_id": "IR emitter entity"
+        }
+      },
+      "sensors": {
+        "title": "IR Remote HVAC - Optional sensors",
+        "description": "Choose any sensors you want to use, or leave these fields blank. You can change them later in Configure.",
+        "data": {
+          "current_temperature_sensor_entity_id": "Current temperature sensor entity",
+          "current_humidity_sensor_entity_id": "Current humidity sensor entity",
+          "power_sensor_entity_id": "Power sensor entity"
         }
       }
     },
@@ -46,7 +55,8 @@
     "error": {
       "invalid_brand": "The selected HVAC brand is not recognised.",
       "invalid_model": "The selected model is not available for this brand.",
-      "invalid_temp_step": "The selected temperature step is not supported for this model."
+      "invalid_name": "Enter a device name.",
+      "invalid_emitter": "Select an available IR emitter."
     }
   },
   "options": {
@@ -95,14 +105,9 @@
     }
   },
   "entity": {
-    "climate": {
-      "irremote_hvac": {
-        "name": "IR Remote HVAC"
-      }
-    },
     "switch": {
       "power": {
-        "name": ""
+        "name": "Power"
       }
     }
   }

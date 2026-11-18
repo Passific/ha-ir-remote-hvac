@@ -203,14 +203,17 @@ async def async_setup_entry(
         DEFAULT_DEBOUNCE_DELAY,
     )
     current_temperature_sensor_entity_id = options.get(
-        CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID
-    ) or config_entry.data.get(CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID)
+        CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID,
+        config_entry.data.get(CONF_CURRENT_TEMPERATURE_SENSOR_ENTITY_ID),
+    )
     current_humidity_sensor_entity_id = options.get(
-        CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID
-    ) or config_entry.data.get(CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID)
+        CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID,
+        config_entry.data.get(CONF_CURRENT_HUMIDITY_SENSOR_ENTITY_ID),
+    )
     power_sensor_entity_id = options.get(
-        CONF_POWER_SENSOR_ENTITY_ID
-    ) or config_entry.data.get(CONF_POWER_SENSOR_ENTITY_ID)
+        CONF_POWER_SENSOR_ENTITY_ID,
+        config_entry.data.get(CONF_POWER_SENSOR_ENTITY_ID),
+    )
     power_threshold_w = _coerce_float(
         options.get(
             CONF_POWER_THRESHOLD,
@@ -254,7 +257,6 @@ class IrRemoteHvacClimate(InfraredEmitterConsumerEntity, RestoreClimate):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
-    _attr_translation_key = "irremote_hvac"
 
     def __init__(
         self,

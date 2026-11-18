@@ -2,14 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "title": "IR Remote HVAC - Emetteur",
-        "description": "Donnez un nom a l'appareil et selectionnez l'entite emetteur IR qui transmettra les commandes a l'unite de climatisation.",
-        "data": {
-          "name": "Nom de l'appareil",
-          "emitter_entity_id": "Entite emetteur IR"
-        }
-      },
-      "brand": {
         "title": "IR Remote HVAC - Marque",
         "description": "Selectionnez la marque du systeme HVAC, puis le modele correspondant.",
         "data": {
@@ -18,24 +10,41 @@
       },
       "model": {
         "title": "IR Remote HVAC - Modele",
-        "description": "Selectionnez le modele ou la telecommande correspondant a votre appareil HVAC.",
+        "description": "Selectionnez le modele correspondant a votre appareil HVAC. Les entrees marquees (remote) sont des telecommandes.",
         "data": {
           "model": "Modele / telecommande HVAC"
         }
       },
-      "temp_step": {
-        "title": "IR Remote HVAC - Pas de temperature",
-        "description": "Choisissez le pas de temperature pris en charge par le modele selectionne.",
-        "data": {
-          "temp_step": "Pas de temperature"
-        }
-      },
       "reconfigure": {
         "title": "IR Remote HVAC - Reconfigurer",
-        "description": "Mettez a jour le nom de l'appareil et l'emetteur IR, puis selectionnez la marque et le modele HVAC.",
+        "description": "Confirmez ou modifiez la marque, puis choisissez le modele ou la telecommande.",
+        "data": {
+          "brand": "Marque HVAC"
+        }
+      },
+      "device": {
+        "title": "IR Remote HVAC - Nom et emetteur",
+        "description": "Gardez le nom propose ou saisissez le votre, puis selectionnez l'emetteur IR qui commande l'appareil.",
         "data": {
           "name": "Nom de l'appareil",
           "emitter_entity_id": "Entite emetteur IR"
+        }
+      },
+      "device_name_in_use": {
+        "title": "IR Remote HVAC - Nom deja utilise",
+        "description": "Un autre appareil IR Remote HVAC porte ce nom. Vous pouvez le garder et attribuer les appareils a des zones differentes dans Home Assistant s'ils se trouvent dans des pieces differentes. Selectionnez l'emetteur IR qui commande cet appareil.",
+        "data": {
+          "name": "Nom de l'appareil",
+          "emitter_entity_id": "Entite emetteur IR"
+        }
+      },
+      "sensors": {
+        "title": "IR Remote HVAC - Capteurs optionnels",
+        "description": "Choisissez les capteurs a utiliser ou laissez ces champs vides. Vous pourrez les modifier dans Configurer.",
+        "data": {
+          "current_temperature_sensor_entity_id": "Entite capteur de temperature actuelle",
+          "current_humidity_sensor_entity_id": "Entite capteur d'humidite actuelle",
+          "power_sensor_entity_id": "Entite capteur de puissance"
         }
       }
     },
@@ -46,7 +55,8 @@
     "error": {
       "invalid_brand": "La marque HVAC selectionnee n'est pas reconnue.",
       "invalid_model": "Le modele selectionne n'est pas disponible pour cette marque.",
-      "invalid_temp_step": "Le pas de temperature selectionne n'est pas pris en charge pour ce modele."
+      "invalid_name": "Saisissez un nom pour l'appareil.",
+      "invalid_emitter": "Selectionnez un emetteur IR disponible."
     }
   },
   "options": {
@@ -95,14 +105,9 @@
     }
   },
   "entity": {
-    "climate": {
-      "irremote_hvac": {
-        "name": "IR Remote HVAC"
-      }
-    },
     "switch": {
       "power": {
-        "name": ""
+        "name": "Marche/arrêt"
       }
     }
   }
